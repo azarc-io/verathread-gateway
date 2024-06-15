@@ -1,0 +1,19 @@
+desc: app
+triggers:
+  - name: ""
+    pattens:
+      - '**/*.go'
+      - '**/*.yaml'
+    env:
+      DEBUG: "1"
+      GOPRIVATE: "github.com/azarc-io"
+    #  -tags "wg_composition_v8"
+    cmd: go build -gcflags="all=-N -l" -o bin/__vth-gateway cmd/app/main.go && chmod 775 bin/__vth-gateway && bin/__vth-gateway
+    shell: true
+    delay: 100ms
+    stop_timeout: 500ms
+    signal: "SIGTERM"
+    kill_signal: "SIGTERM"
+watch_paths:
+  - .
+watch_depth: 5

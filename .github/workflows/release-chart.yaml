@@ -1,0 +1,47 @@
+name: Release Chart
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+
+concurrency:
+  group: chart-${{ github.ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Log Tag"
+        id: get_tag_name
+        run: |
+          echo "ref: ${GITHUB_REF/refs\/tags\//}"
+          echo "ref name: ${{ github.ref_name}}"
+      - name: "Checkout Gateway"
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.ref_name}}
+      - name: "Checkout Helm Chart Repo"
+        uses: actions/checkout@v4
+        with:
+          repository: azarc-io/helm-charts
+          ref: refs/heads/gh-pages
+          path: .helm-chart-repo
+          token: "${{ secrets.HELM_CHARTS_TOKEN }}"
+      - name: "Publish The Helm Chart"
+        id: publish-chart
+        uses: ./.github/actions/chart-publish
+        with:
+          charts_dir: .helm-chart-repo
+          charts_url: "https://azarc-io.github.io/helm-charts"
+          chart: deployment/charts/gateway
+      - name: "Commit And Push Chart"
+        uses: EndBug/add-and-commit@v9
+        with:
+          author_name: Wael Jammal
+          author_email: wael.jammal@azarc.io
+          cwd: .helm-chart-repo
+          message: "Commit chart ${{ steps.publish-chart.outputs.chart }}"

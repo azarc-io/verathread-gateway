@@ -1,0 +1,20 @@
+name: 'BuildX'
+description: 'Setup Docker BuildX'
+inputs: {}
+outputs: {}
+runs:
+  using: "composite"
+  steps:
+    - name: "Setup QEMU"
+      uses: docker/setup-qemu-action@v3
+#    - name: "Setup Builders"
+#      shell: bash
+#      run: docker context create builders
+    - name: "Setup BuildX"
+      uses: docker/setup-buildx-action@v3
+#      with:
+#        version: latest
+#        endpoint: builders
+#    - name: "Setup Regctl"
+#      shell: bash
+#      run: curl -L https://github.com/regclient/regclient/releases/latest/download/regctl-linux-amd64 >regctl

@@ -1,0 +1,52 @@
+name: Release Documentation
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+
+concurrency:
+  group: docs-${{ github.ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  release:
+    name: Release Documentation
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    steps:
+      - name: "Checkout Gateway"
+        uses: actions/checkout@v4
+      - name: "Setup Pages"
+        uses: actions/configure-pages@v5
+      - name: "Setup Python"
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+          cache: 'pip'
+          cache-dependency-path: docs/requirements.txt
+      - name: "Install Dependencies"
+        working-directory: docs
+        run: |
+          pip install --upgrade pip
+          pip install mkdocs pymdown-extensions mkdocs-material \
+            mkdocs-extra-sass-plugin mkdocs-minify-plugin mkdocs-redirects livereload mkdocs-glightbox \
+            mkdocs-mermaid2-plugin mkdocs-drawio-file
+      - name: "Build"
+        working-directory: docs
+        run: mkdocs build
+      - name: "Upload artifact"
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # Upload entire repository
+          path: 'docs/site'
+      - name: "Deploy to GitHub Pages"
+        id: deployment
+        uses: actions/deploy-pages@v4

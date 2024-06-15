@@ -1,0 +1,29 @@
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: vth-cloud-account-stream
+  namespace: {{ .Release.Namespace }}
+spec:
+  type: pubsub.az.jetstream.stream
+  version: v1
+  metadata:
+    - name: natsURL
+      secretKeyRef:
+        name: NATS_ADDRESS
+        key: NATS_ADDRESS
+    - name: streamName
+      value: "ACCOUNT"
+    - name: subjects
+      value: "account.v1.>"
+    - name: deliverPolicy
+      value: new
+    - name: queueGroupName
+      value: "account-events"
+    - name: durableName
+      value: "account-events-subscription"
+    - name: backOff
+      value: "50ms, 1s, 5s, 10s, 60s"
+    - name: ackWait
+      value: 10s
+auth:
+  secretStore: secrets-store

@@ -1,0 +1,9 @@
+FROM golang:1.22-alpine as helper
+LABEL authors="waeljammal"
+RUN CGO_ENABLED=0 go install github.com/go-delve/delve/cmd/dlv@latest
+
+FROM gcr.io/distroless/static:debug
+WORKDIR /
+COPY --from=helper /go/bin/dlv /
+COPY bin/vth-gateway /
+# COPY cmd/web2/dist /web
