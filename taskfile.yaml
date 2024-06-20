@@ -161,12 +161,11 @@ tasks:
   setup:
     desc: "run this if you are starting with a fresh checkout, see readme for configuration instructions"
     cmds:
-      - "curl -s https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | TAG=v5.6.3 bash"
+      - curl -fsSL https://raw.githubusercontent.com/tilt-dev/tilt/master/scripts/install.sh | bash
       - task: setup:tilt:template
       - task: setup:env:template
       - task: dapr:install
-    env:
-      TAG: v5.6.3
+      - task: k3d:install
 
   setup:tilt:template:
     desc: "copies the tilt config template to the root of the project, will not overwrite if existing"
@@ -190,7 +189,9 @@ tasks:
 
   k3d:install:
     cmds:
-      - curl -s https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | TAG=v5.0.0 bash
+      - curl -s https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | TAG=v5.6.3 bash
+    env:
+      TAG: v5.6.3
 
   k3d:create:
     desc: "Creates a new cluster, only run this if you don't have an existing cluster"
