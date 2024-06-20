@@ -4,7 +4,7 @@ This is the Verathread Gateway, it also contains the shell that loads federated 
 
 You can find the documentation site [here](https://gateway-docs.cloud.azarc.dev/)
 
-# Deploying the gateway using helm
+## Deploying the gateway using helm
 
 ```shell
 helm repo add vth-gateway https://azarc-io.github.io/helm-charts
