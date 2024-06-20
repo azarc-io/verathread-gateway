@@ -1,0 +1,37 @@
+nats:
+  nameOverride: nats
+  fullnameOverride: nats
+  podDisruptionBudget:
+    enabled: false
+  natsbox:
+    enabled: true
+  nats:
+    externalAccess: false
+    config:
+      - name: accounts
+        secret:
+          secretName: nats-custom-conf
+    #      - name: leafnodes
+    #        secret:
+    #          secretName: nats-custom-conf
+    jetstream:
+      enabled: true
+      domain: local
+      fileStorage:
+        enabled: true
+        size: 1Gi
+  cluster:
+    enabled: false
+    replicas: 1
+    noAdvertise: false
+  podAnnotations:
+    argocd.argoproj.io/sync-wave: "1"
+
+# exposes the service over node ports for local access (enabled only for local development)
+local: true
+
+secret:
+  accounts: YWNjb3VudHM6eyJBQ0MiOnsiamV0c3RyZWFtIjp0cnVlLCJ1c2VycyI6W3sicGFzcyI6InBhc3N3b3JkIiwidXNlciI6ImRldmVsb3BlciJ9XX0sIlNZUyI6eyJ1c2VycyI6W3sicGFzcyI6InBhc3N3b3JkIiwidXNlciI6ImFkbWluIn1dfX0=
+  leafnodes: bGVhZm5vZGVzIHsKICBsaXN0ZW46ICIwLjAuMC4wOjc0MjIiCiAgbm9fYWR2ZXJ0aXNlOiB0cnVlCiAgcmVtb3RlczogW3sKICAgIHVybDogIm5hdHMtbGVhZjovL2RldmVsb3BlcjpEU0Y0MmYyM2Z2MjQhZFNGQG5hdHMuY2xvdWQuYXphcmMuZGV2Ojc0MjIiCiAgICBhY2NvdW50OiAiQUNDIgogIH1dCn0=
+
+jetstream:

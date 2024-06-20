@@ -2,6 +2,13 @@
 
 version: '3'
 
+##############################################################################
+# DOT ENV SUPPORT
+##############################################################################
+
+dotenv:
+  - .env
+
 env:
   BINARY_NAME: vth-gateway
   GIT_REPO: https://github.com/azarc-io/verathread-gateway
@@ -206,15 +213,14 @@ tasks:
   k3d:install:charts:
     desc: "Installs dependency charts, called automatically when using k3d:create, you can call this to update the charts"
     cmds:
-      - helm upgrade --install dapr --create-namespace ./deployment/charts/dapr  --namespace dapr-system
-      - helm upgrade --install nats --create-namespace ./deployment/charts/nats  --namespace $NAMESPACE
-      - helm upgrade --install mongo --create-namespace ./deployment/charts/mongo --namespace $NAMESPACE
+      - helm upgrade --install dapr --create-namespace ./deployment/charts/dapr  --namespace dapr-system --wait
+      - helm upgrade --install nats --create-namespace ./deployment/charts/nats  --namespace $NAMESPACE --wait
 
   k3d:delete:charts:
     desc: "Deletes all the charts installed by k3d:install:charts"
     cmds:
       - helm delete dapr --namespace dapr-system
-      - helm delete mongo --namespace $NAMESPACE
+      - helm delete nats --namespace $NAMESPACE
 
   ##############################################################################
   # DAPR

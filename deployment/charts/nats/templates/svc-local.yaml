@@ -1,0 +1,42 @@
+{{- if .Values.local }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: nats-local
+  labels:
+    app.kubernetes.io/instance: nats
+    app.kubernetes.io/name: nats
+spec:
+  ports:
+    - name: client
+      protocol: TCP
+      port: 4222
+      targetPort: 4222
+      nodePort: 31422
+    - name: cluster
+      protocol: TCP
+      port: 6222
+      targetPort: 6222
+    - name: monitor
+      protocol: TCP
+      port: 8222
+      targetPort: 8222
+      nodePort: 31822
+    - name: metrics
+      protocol: TCP
+      port: 7777
+      targetPort: 7777
+    - name: leafnodes
+      protocol: TCP
+      port: 7422
+      targetPort: 7422
+    - name: gateways
+      protocol: TCP
+      port: 7522
+      targetPort: 7522
+  selector:
+    app.kubernetes.io/instance: nats
+    app.kubernetes.io/name: nats
+  type: NodePort
+  sessionAffinity: None
+{{- end}}
