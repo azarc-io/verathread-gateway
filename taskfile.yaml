@@ -161,10 +161,12 @@ tasks:
   setup:
     desc: "run this if you are starting with a fresh checkout, see readme for configuration instructions"
     cmds:
-      - curl -fsSL https://raw.githubusercontent.com/tilt-dev/tilt/master/scripts/install.sh | bash
+      - "curl -s https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | TAG=v5.6.3 bash"
       - task: setup:tilt:template
       - task: setup:env:template
       - task: dapr:install
+    env:
+      TAG: v5.6.3
 
   setup:tilt:template:
     desc: "copies the tilt config template to the root of the project, will not overwrite if existing"
