@@ -1,0 +1,42 @@
+name: "Chart Publish Action"
+description: "Publish a Helm chart to a directory"
+author: "moikot"
+branding:
+  color: purple
+  icon: anchor
+inputs:
+  chart:
+    description: "The relative path under $GITHUB_WORKSPACE to the chart (default: 'chart')"
+    default: "chart"
+    required: false
+
+  helm_image:
+    description: "The Docker image containing Helm (default: 'alpine/helm:3.3.0')"
+    default: "alpine/helm:3.3.0"
+    required: false
+
+  charts_dir:
+    description: "The relative path under $GITHUB_WORKSPACE to publish to"
+    equired: true
+
+  charts_url:
+    description: "The URL of the charts repository (e.g. 'https://janedoe.github.io/helm-charts')"
+    required: true
+
+outputs:
+  chart:
+    description: "The published chart file name"    
+    value: ${{ steps.publish.outputs.chart }}
+
+runs:
+  using: composite
+  steps:
+    - id: publish
+      run: |
+        args=(--chart "${{ inputs.chart }}")
+        args+=(--helm-image "${{ inputs.helm_image }}")
+        args+=(--charts-dir "${{ inputs.charts_dir }}")
+        args+=(--charts-url "${{ inputs.charts_url }}")
+        "$GITHUB_ACTION_PATH/publish.sh" "${args[@]}"
+      shell: bash
+

@@ -1,0 +1,605 @@
+name: Verathread Gateway
+
+on:
+  pull_request:
+    branches: [ 'main' ]
+    types:
+      - opened
+      - synchronize
+
+env:
+  AWS_REGION: eu-west-2
+  FORCE_COLOR: 1
+  DRY_RUN: false
+  DEPLOY: true
+  RUNNER_ALLOW_RUNASROOT: "1"
+  DOCKER_REGISTRY: ghcr.io/azarc-io/verathread-gateway
+  GOLANGCILINT_VER: "v1.59.1"
+
+concurrency:
+  group: pr-${{ github.ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  lint-be:
+    name: "Lint BE"
+    runs-on: ubuntu-latest
+    env:
+      GOLANGCILINT_VER: "v1.59.1"
+      GOPRIVATE: "github.com/azarc-io"
+    steps:
+      - name: "Checkout"
+        uses: actions/checkout@v4
+      - name: "Setup Go"
+        uses: actions/setup-go@v5
+        with:
+          cache-dependency-path: go.sum
+          go-version-file: go.mod
+      - name: "Fix git URL"
+        run: git config --global url."https://x-access-token:${{ secrets.PAT_TOKEN }}@github.com/".insteadOf "https://github.com/"
+      - name: "Go Mod"
+        run: go mod download
+      - name: "Lint"
+        uses: golangci/golangci-lint-action@v6.0.1
+        with:
+          version: ${{ env.GOLANGCILINT_VER }}
+          skip-cache: true
+
+  unit-tests-be:
+    name: "Unit BE - ${{ matrix.label }}"
+    runs-on: "${{ matrix.os }}"
+    env:
+      GOLANGCILINT_VER: "v1.59.1"
+      GOPRIVATE: "github.com/azarc-io"
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target_os: linux
+            target_arch: amd64
+            label: Linux (AMD64)
+          - os: ubuntu-latest
+            target_os: linux
+            target_arch: arm64
+            label: Linux (ARM64)
+    steps:
+      - name: "Checkout"
+        uses: actions/checkout@v4
+      - name: "Setup Go"
+        uses: actions/setup-go@v5
+        with:
+          cache-dependency-path: go.sum
+          go-version-file: go.mod
+      - name: "Fix git URL"
+        run: git config --global url."https://x-access-token:${{ secrets.PAT_TOKEN }}@github.com/".insteadOf "https://github.com/"
+      - name: "Test"
+        run: echo "TDB"
+      - name: "Cancel Workflow If Failure"
+        if: "failure()"
+        uses: "andymckay/cancel-action@0.5"
+
+  integration-tests-be:
+    name: "Integration BE - ${{ matrix.label }}"
+    runs-on: "${{ matrix.os }}"
+    env:
+      GOLANGCILINT_VER: "v1.59.1"
+      GOPRIVATE: "github.com/azarc-io"
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target_os: linux
+            target_arch: amd64
+            label: Linux (AMD64)
+          - os: ubuntu-latest
+            target_os: linux
+            target_arch: arm64
+            label: Linux (ARM64)
+    steps:
+      - name: "Checkout"
+        uses: actions/checkout@v4
+      - name: "Setup Go"
+        uses: actions/setup-go@v5
+        with:
+          cache-dependency-path: go.sum
+          go-version-file: go.mod
+      - name: "Fix git URL"
+        run: git config --global url."https://x-access-token:${{ secrets.PAT_TOKEN }}@github.com/".insteadOf "https://github.com/"
+      - name: "Test"
+        run: echo "TDB"
+      - name: "Cancel Workflow If Failure"
+        if: "failure()"
+        uses: "andymckay/cancel-action@0.5"
+
+  build-be:
+    name: "Build BE"
+    runs-on: ubuntu-latest
+    env:
+      GOLANGCILINT_VER: "v1.59.1"
+      GOPRIVATE: "github.com/azarc-io"
+    steps:
+      - name: "Checkout"
+        uses: actions/checkout@v4
+      - name: "Configure Environment"
+        uses: ./.github/actions/configuration
+        id: configure
+        with:
+          jira-base-url: ${{ secrets.JIRA_BASE_URL }}
+          jira-user-email: ${{ secrets.JIRA_USER_EMAIL }}
+          jira-api-token: ${{ secrets.JIRA_API_TOKEN }}
+          use-sudo: true
+      - name: "Setup Go"
+        uses: actions/setup-go@v5
+        with:
+          cache-dependency-path: go.sum
+          go-version-file: go.mod
+      - name: "Setup Task"
+        uses: arduino/setup-task@v2
+        with:
+          version: 3.x
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: "Setup BuildX"
+        uses: ./.github/actions/buildx
+      - name: "GHCR Login"
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: "Fix git URL"
+        run: git config --global url."https://x-access-token:${{ secrets.PAT_TOKEN }}@github.com/".insteadOf "https://github.com/"
+      - name: "Calculate Variables"
+        id: vars
+        run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+      - name: "Build"
+        run: task build:be:multi
+      - name: "Build Docker"
+        run: task docker:build:multi
+        env:
+          DOCKER_REGISTRY: ghcr.io/azarc-io/verathread-gateway
+          DOCKER_IMAGE: gateway-be
+          DOCKER_VERSION: ${{ steps.configure.outputs.issue }}-${{ github.run_number }}-${{ steps.vars.outputs.sha_short }}
+#      - uses: docker/build-push-action@v5
+#        with:
+#          context: .
+#          platforms: linux/amd64,linux/arm64
+#          file: deployment/docker/app/Dockerfile.multi
+#          push: true
+#          tags: ${{ env.DOCKER_REGISTRY }}/gateway-be:${{ steps.configure.outputs.issue }}-${{ github.run_number }}-${{ steps.vars.outputs.sha_short }}
+#          cache-from: type=gha
+#          cache-to: type=gha,mode=max
+      - name: "Upload Artifacts"
+        uses: actions/upload-artifact@v4
+        with:
+          name: gateway-be
+          path: bin/linux-*
+
+  build-fe:
+    name: "Build FE"
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Checkout"
+        uses: actions/checkout@v4
+      - name: "Configure Environment"
+        uses: ./.github/actions/configuration
+        id: configure
+        with:
+          jira-base-url: ${{ secrets.JIRA_BASE_URL }}
+          jira-user-email: ${{ secrets.JIRA_USER_EMAIL }}
+          jira-api-token: ${{ secrets.JIRA_API_TOKEN }}
+          use-sudo: true
+      - name: "Setup BuildX"
+        uses: ./.github/actions/buildx
+      - name: "Setup Node"
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'v22'
+          cache: 'yarn'
+          cache-dependency-path: cmd/web/yarn.lock
+        env:
+          FORCE_COLOR: 0
+      - name: "Setup Task"
+        uses: arduino/setup-task@v2
+        with:
+          version: 3.x
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: "Fix git URL"
+        run: git config --global url."https://x-access-token:${{ secrets.PAT_TOKEN }}@github.com/".insteadOf "https://github.com/"
+      - name: "GHCR Login"
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: "Calculate Variables"
+        id: vars
+        run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+      - name: "Yarn Install"
+        run: task ci:fe:install
+      - name: "Lint"
+        run: task lint:fe
+      - name: "Test"
+        run: task test:fe
+      - name: "Build"
+        run: task build:fe
+      - name: "Build Docker"
+        run: task docker:build:multi
+        env:
+          DOCKER_REGISTRY: ghcr.io/azarc-io/verathread-gateway
+          DOCKER_IMAGE: gateway-fe
+          DOCKER_VERSION: ${{ steps.configure.outputs.issue }}-${{ github.run_number }}-${{ steps.vars.outputs.sha_short }}
+          DOCKERFILE: "deployment/docker/web/Dockerfile"
+      - name: "Upload Artifacts"
+        uses: actions/upload-artifact@v4
+        with:
+          name: gateway-fe
+          path: cmd/web/dist
+
+  e2e:
+    name: "E2E - K8S ${{ matrix.k8s-version }}"
+    runs-on: ubuntu-latest
+    needs:
+      - unit-tests-be
+      - integration-tests-be
+      - lint-be
+      - build-fe
+      - build-be
+    env:
+      REGISTRY_PORT: 5000
+      REGISTRY_NAME: kind-registry
+      GATEWAY_REGISTRY: localhost:5000/gateway
+      GATEWAY_WEB_REGISTRY: localhost:5000/gateway-web
+      GATEWAY_TAG: dev
+      NAMESPACE: gateway-tests
+    strategy:
+      fail-fast: false # Keep running if one leg fails.
+      matrix:
+        k8s-version:
+          - v1.24.7
+        # Map between K8s and KinD versions.
+        # This is attempting to make it a bit clearer what's being tested.
+        # See: https://github.com/kubernetes-sigs/kind/releases/tag/v0.11.1
+        include:
+          - k8s-version: v1.24.7
+            kind-version: v0.17.0
+            kind-image-sha: sha256:577c630ce8e509131eab1aea12c022190978dd2f745aac5eb1fe65c0807eb315
+          - k8s-version: v1.25.3
+            kind-version: v0.17.0
+            kind-image-sha: sha256:f52781bc0d7a19fb6c405c2af83abfeb311f130707a0e219175677e366cc45d1
+    # if: github.event_name != 'pull_request'
+    steps:
+      - name: "Checkout"
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Set up Go
+        id: setup-go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+      - name: "Configure KinD"
+        run: |
+          cat > kind.yaml <<EOF
+          apiVersion: kind.x-k8s.io/v1alpha4
+          kind: Cluster
+          nodes:
+          - role: control-plane
+            image: kindest/node:${{ matrix.k8s-version }}@${{ matrix.kind-image-sha }}
+          - role: worker
+            image: kindest/node:${{ matrix.k8s-version }}@${{ matrix.kind-image-sha }}
+          - role: worker
+            image: kindest/node:${{ matrix.k8s-version }}@${{ matrix.kind-image-sha }}
+          - role: worker
+            image: kindest/node:${{ matrix.k8s-version }}@${{ matrix.kind-image-sha }}
+          containerdConfigPatches:
+          - |-
+            [plugins."io.containerd.grpc.v1.cri".registry.mirrors."localhost:$REGISTRY_PORT"]
+              endpoint = ["http://$REGISTRY_NAME:$REGISTRY_PORT"]
+          EOF
+
+          # Log the generated kind.yaml for easy reference.
+          cat kind.yaml
+
+          # Set log target directories
+          echo "GATEWAY_CONTAINER_LOG_PATH=$GITHUB_WORKSPACE/container_logs/${{ matrix.k8s-version }}_${{ matrix.mode }}" >> $GITHUB_ENV
+          echo "GATEWAY_TEST_LOG_PATH=$GITHUB_WORKSPACE/test_logs/${{ matrix.k8s-version }}_${{ matrix.mode }}" >> $GITHUB_ENV
+      - name: "Create KinD Cluster"
+        uses: helm/kind-action@v1.10.0
+        with:
+          config: kind.yaml
+          cluster_name: kind
+          version: ${{ matrix.kind-version }}
+      - name: "Get KinD info"
+        run: |
+          kubectl cluster-info --context kind-kind
+          NODE_IP=$(kubectl get nodes \
+                    -lkubernetes.io/hostname!=kind-control-plane \
+                    -ojsonpath='{.items[0].status.addresses[?(@.type=="InternalIP")].address}')
+          echo "MINIKUBE_NODE_IP=$NODE_IP" >> $GITHUB_ENV
+      - name: "Setup Test Output"
+        shell: bash
+        run: |
+          export TEST_OUTPUT_FILE_PREFIX=$GITHUB_WORKSPACE/test_report
+          echo "TEST_OUTPUT_FILE_PREFIX=$TEST_OUTPUT_FILE_PREFIX" >> $GITHUB_ENV
+      - name: "Setup Local registry"
+        run: |
+          # Run a registry.
+          docker run -d --restart=always \
+            -p $REGISTRY_PORT:$REGISTRY_PORT --name $REGISTRY_NAME registry:2
+          # Connect the registry to the KinD network.
+          docker network connect "kind" $REGISTRY_NAME
+      - name: "Setup Helm"
+        uses: azure/setup-helm@v4.2.0
+        with:
+          version: v3.3.4
+      - name: "Calculate Variables"
+        id: vars
+        run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+  qa:
+    name: "Promote To QA"
+    runs-on: ubuntu-latest
+    environment: qa
+    needs:
+      - e2e
+    steps:
+      - name: "Checkout"
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: "Configure Environment"
+        uses: ./.github/actions/configuration
+        id: configure
+        with:
+          jira-base-url: ${{ secrets.JIRA_BASE_URL }}
+          jira-user-email: ${{ secrets.JIRA_USER_EMAIL }}
+          jira-api-token: ${{ secrets.JIRA_API_TOKEN }}
+          use-sudo: true
+      - name: "Calculate Variables"
+        id: vars
+        run: |
+          echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+          echo "docker_tag=${{ steps.configure.outputs.issue }}-${{ github.run_number }}-$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+          mkdir -p ~/.kube && echo "${{ secrets.KUBECONFIG_DEV }}" | base64 -d > ~/.kube/config
+          chmod go-r ~/.kube/config
+      - name: "Install Kubectl"
+        uses: azure/setup-kubectl@v4
+      - name: "Install Helm"
+        uses: azure/setup-helm@v4.2.0
+      - name: "Create Docker Login Secret"
+        run: |
+          kubectl create namespace qa-gateway-1 --dry-run=client -o yaml | kubectl apply -f -
+          kubectl create secret docker-registry ghcr-login-secret \
+            --docker-server="https://ghcr.io" \
+            --docker-username="waeljammal" \
+            --docker-password="${{ secrets.GHCR_DOCKER_TOKEN }}" \
+            --docker-email="wael.jammal@azarc.io" \
+            --namespace=qa-gateway-1 \
+            --dry-run=client -o yaml | kubectl apply -f -
+      - name: "Deploy Chart"
+        run: |
+          helm upgrade vth-gateway deployment/charts/gateway \
+            --install --wait --atomic --create-namespace --timeout=2m \
+            --namespace=qa-gateway-1 \
+            --values=deployment/charts/gateway/values.yaml \
+            --values=deployment/charts/gateway/values-qa1.yaml \
+            --set image.repository=ghcr.io/azarc-io/verathread-gateway/gateway-be \
+            --set image.web_repository=ghcr.io/azarc-io/verathread-gateway/gateway-fe \
+            --set image.tag=${{ steps.vars.outputs.docker_tag }} \
+            --set image.web_repository_tag=${{ steps.vars.outputs.docker_tag }}
+
+  release:
+    name: "Prepare Release"
+    runs-on: ubuntu-latest
+    environment: production
+    outputs:
+      version: ${{ steps.tag.outputs.tag }}
+    needs:
+      - qa
+    steps:
+      - name: "Checkout"
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: "Configure Environment"
+        uses: ./.github/actions/configuration
+        id: configure
+        with:
+          jira-base-url: ${{ secrets.JIRA_BASE_URL }}
+          jira-user-email: ${{ secrets.JIRA_USER_EMAIL }}
+          jira-api-token: ${{ secrets.JIRA_API_TOKEN }}
+          use-sudo: true
+      - name: "Setup BuildX"
+        uses: ./.github/actions/buildx
+      - name: "Setup task"
+        uses: arduino/setup-task@v2
+        with:
+          version: 3.x
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: "🏗 Setup yq"
+        uses: frenck/action-setup-yq@v1
+        with:
+          version: 4.25.2
+      - name: "GHCR Login"
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.PAT_TOKEN }}
+      - name: "Fix Git"
+        run: |
+          git config --global url."https://x-access-token:${{ secrets.PAT_TOKEN }}@github.com/".insteadOf "https://github.com/"
+          git config --global user.email "ci@azarc.io"
+          git config --global user.name "CI"
+      - name: "Calculate Variables"
+        id: vars
+        run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+      - name: "Bump Version & Tag"
+        uses: anothrNick/github-tag-action@1.67.0
+        id: tag
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          WITH_V: true
+          DEFAULT_BUMP: minor
+          INITIAL_VERSION: 1.0.0
+          PRERELEASE: false
+          DRY_RUN: true
+      - name: "Update Version Files"
+        shell: bash
+        run: |
+          yq --version
+          yq -i '.version = "${{ steps.tag.outputs.tag }}"' 'deployment/charts/gateway/Chart.yaml'
+          yq -i '.image.repository = "${{ env.DOCKER_REGISTRY }}/gateway-be"' 'deployment/charts/gateway/values.yaml'
+          yq -i '.image.web_repository = "${{ env.DOCKER_REGISTRY }}/gateway-fe"' 'deployment/charts/gateway/values.yaml'
+          yq -i '.image.tag = "${{ steps.tag.outputs.tag }}"' 'deployment/charts/gateway/values.yaml'
+          yq -i '.image.web_repository_tag = "${{ steps.tag.outputs.tag }}"' 'deployment/charts/gateway/values.yaml'
+      - name: "Commit Changes"
+        run: git add . && git commit -m "Versions updated"
+      - name: "Docker Re-Tag FE"
+        run: task docker:re-tag
+        env:
+          DOCKER_IMAGE: gateway-fe
+          SOURCE_VERSION: ${{ steps.configure.outputs.issue }}-${{ github.run_number }}-${{ steps.vars.outputs.sha_short }}
+          TARGET_VERSION: ${{ steps.tag.outputs.tag }}
+      - name: "Docker Re-Tag BE"
+        run: task docker:re-tag
+        env:
+          DOCKER_IMAGE: gateway-be
+          SOURCE_VERSION: ${{ steps.configure.outputs.issue }}-${{ github.run_number }}-${{ steps.vars.outputs.sha_short }}
+          TARGET_VERSION: ${{ steps.tag.outputs.tag }}
+      - name: "Push Git Tag"
+        run: git tag ${{ steps.tag.outputs.tag }} && git push origin tag ${{ steps.tag.outputs.tag }}
+      - name: "Download FE Artifact"
+        uses: actions/download-artifact@v4
+        with:
+          name: gateway-fe
+      - name: "Download BE Artifact"
+        uses: actions/download-artifact@v4
+        with:
+          name: gateway-be
+
+  chart:
+    name: "Release Chart"
+    runs-on: ubuntu-latest
+    needs:
+      - release
+    steps:
+      - name: "Checkout Gateway"
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ needs.release.outputs.version }}
+      - name: "Checkout Helm Chart Repo"
+        uses: actions/checkout@v4
+        with:
+          repository: azarc-io/helm-charts
+          ref: refs/heads/gh-pages
+          path: .helm-chart-repo
+          token: "${{ secrets.HELM_CHARTS_TOKEN }}"
+      - name: "Publish The Helm Chart"
+        id: publish-chart
+        uses: ./.github/actions/chart-publish
+        with:
+          charts_dir: .helm-chart-repo
+          charts_url: "https://azarc-io.github.io/helm-charts"
+          chart: deployment/charts/gateway
+      - name: "Commit And Push Chart"
+        uses: EndBug/add-and-commit@v9
+        with:
+          author_name: Wael Jammal
+          author_email: wael.jammal@azarc.io
+          cwd: .helm-chart-repo
+          message: "Commit chart ${{ steps.publish-chart.outputs.chart }}"
+
+  cleanup:
+    name: "Clean Up"
+    runs-on: ubuntu-latest
+    needs:
+      - release
+    steps:
+      - name: "Checkout Gateway"
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: "Configure Environment"
+        uses: ./.github/actions/configuration
+        id: configure
+        with:
+          jira-base-url: ${{ secrets.JIRA_BASE_URL }}
+          jira-user-email: ${{ secrets.JIRA_USER_EMAIL }}
+          jira-api-token: ${{ secrets.JIRA_API_TOKEN }}
+          use-sudo: true
+      - uses: dataaxiom/ghcr-cleanup-action@v1
+        with:
+          tags: ${{ steps.configure.outputs.issue }}-*
+          exclude-tags: 'v*,latest'
+          token: ${{ secrets.GITHUB_TOKEN }}
+          owner: azarc-io
+          package: verathread-gateway/gateway-be
+          log-level: debug
+      - name: "Delete GoReleaser Caches"
+        run: |
+          gh cache list --limit 100 | \
+            grep "vth-gateway-linux-${{ steps.configure.outputs.issue }}" | \
+            awk '{print $1}' | xargs -I {} gh cache delete {}
+        env:
+          GH_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+
+  documentation:
+    name: Release Documentation
+    runs-on: ubuntu-latest
+    needs:
+      - release
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    steps:
+      - name: "Checkout Gateway"
+        uses: actions/checkout@v4
+      - name: "Setup Pages"
+        uses: actions/configure-pages@v5
+      - name: "Setup Python"
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+          cache: 'pip'
+          cache-dependency-path: docs/requirements.txt
+      - name: "Install Dependencies"
+        working-directory: docs
+        run: |
+          pip install --upgrade pip
+          pip install mkdocs pymdown-extensions mkdocs-material \
+            mkdocs-extra-sass-plugin mkdocs-minify-plugin mkdocs-redirects livereload mkdocs-glightbox \
+            mkdocs-mermaid2-plugin mkdocs-drawio-file
+      - name: "Build"
+        working-directory: docs
+        run: mkdocs build
+      - name: "Upload artifact"
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # Upload entire repository
+          path: 'docs/site'
+      - name: "Deploy to GitHub Pages"
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+  merge:
+    name: Merge PR
+    runs-on: ubuntu-latest
+    needs:
+      - documentation
+      - cleanup
+      - chart
+    steps:
+      - name: merge
+        uses: nbrugger-tgm/merge-pr-action@v0.2.3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          method: squash
+          pull_request: ${{ github.event.pull_request.number }}

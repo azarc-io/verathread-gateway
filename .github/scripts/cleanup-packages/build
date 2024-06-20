@@ -1,0 +1,8 @@
+#!/bin/sh
+
+# only needed for ci so build for amd64
+GOOS=linux GOARCH=amd64 go build -ldflags "-s -w" -o cleanup cleanup.go
+
+# preforms compression on the binary
+# you can install using brew install upx
+upx --brute cleanup

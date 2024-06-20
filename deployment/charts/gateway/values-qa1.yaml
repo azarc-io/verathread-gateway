@@ -1,0 +1,25 @@
+# handles routing, is split into two / for web and /graphql and /modules for api and static file proxy
+ingress:
+  # If `true`, an Ingress is created
+  enabled: true
+  # The Service port targeted by the Ingress
+  servicePort: http
+  # Ingress annotations
+  annotations:
+    traefik.ingress.kubernetes.io/buffering: |
+      maxrequestbodybytes: 3750000
+      memrequestbodybytes: 3750000
+  # Additional Ingress labels
+  labels: { }
+  # List of rules for the Ingress
+  rules:
+    - host: qa-gateway-1.dev.cloud.azarc.dev
+      service: gateway
+      paths:
+        - /graphql
+        - /module
+        - /api
+    - host: qa-gateway-1.dev.cloud.azarc.dev
+      service: gateway-web
+      paths:
+        - /

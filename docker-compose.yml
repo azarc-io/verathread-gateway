@@ -1,0 +1,31 @@
+﻿services:
+  ##################################################################################
+  # GLOBAL COMMON SERVICES
+  ##################################################################################
+
+  placement:
+    image: "daprio/dapr"
+    command: [ "./placement", "-port", "50006" ]
+    ports:
+      - "8080:8080"
+      - "50006:50006"
+    environment:
+      DAPR_PLACEMENT_METADATA_ENABLED: true
+
+  nats:
+    image: nats:2.10.14-alpine3.19
+    container_name: nats
+    command: -c /etc/nats/nats.conf
+    ports:
+      - "4222:4222" # client port
+      - "6222:6222" # cluster port
+      - "8222:8222" # monitoring port
+    volumes:
+      - ./script/compose/nats.conf:/etc/nats/nats.conf
+      - ./.data/nats:/data
+
+  zipkin:
+    container_name: zipkin
+    image: openzipkin/zipkin-slim
+    ports:
+      - "9411:9411"

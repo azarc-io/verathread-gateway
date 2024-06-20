@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "service.fullname" . }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+    app: {{ include "service.fullname" . }}
+spec:
+  ports:
+    - port: {{ .Values.bind.http }}
+      name: http
+{{- if eq .Values.dev true }}
+    - port: {{ .Values.bind.debug }}
+      name: debug
+{{- end }}
+  clusterIP: None
+  selector:
+    {{- include "service.selectorLabels" . | nindent 4 }}

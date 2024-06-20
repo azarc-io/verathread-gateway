@@ -1,0 +1,85 @@
+site_name: Verathread Gateway
+site_url: https://azarc.io
+site_description: A GraphQL Federation & Application proxy
+copyright: Made by the Azarc.io team
+repo_name: azarc-io/verathread-gateway
+repo_url: https://github.com/azarc-io/verathread-gateway
+edit_uri: edit/main/www/docs/
+
+theme:
+  name: material
+  custom_dir: docs/overrides
+  language: en
+  logo: static/avatar.png
+  favicon: static/favicon.ico
+  include_search_page: false
+  search_index_only: true
+  palette:
+    - media: "(prefers-color-scheme: light)"  # Light mode
+      scheme: default
+      toggle:
+        icon: material/lightbulb-outline
+        name: Switch to light mode
+    - media: "(prefers-color-scheme: dark)"  # Dark mode
+      scheme: slate
+      primary: indigo
+      accent: lime
+      toggle:
+        icon: material/lightbulb
+        name: Switch to dark mode
+  features:
+    - search.suggest
+    - search.highlight
+    - search.share
+
+plugins:
+  - search
+  - redirects: {}
+  - minify:
+      minify_html: true
+  - extra-sass
+  - glightbox
+  - drawio_file
+
+extra:
+  social:
+    - icon: fontawesome/brands/github-alt
+      link: https://github.com/azarc-io/verathread-gateway
+
+nav:
+- Home: index.md
+- About: about.md
+- Getting Started:
+  - gs_setup.md
+- Developing With Tilt (K8S):
+  - tilt_prepare.md
+  - tilt_usage.md
+- Developing With IDE: ide.md
+- Community:
+    - contributing.md
+
+markdown_extensions:
+  - admonition
+  - codehilite
+  - tables
+  - meta
+  - def_list
+  - toc:
+      permalink: true
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.superfences
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - footnotes
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - attr_list
+  - md_in_html
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format

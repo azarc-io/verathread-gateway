@@ -1,0 +1,10 @@
+mkdocs
+pymdown-extensions
+mkdocs-material
+mkdocs-extra-sass-plugin
+mkdocs-minify-plugin
+mkdocs-redirects
+livereload
+mkdocs-glightbox
+mkdocs-mermaid2-plugin
+mkdocs-drawio-file
