@@ -1,9 +1,0 @@
-{
-  "to-debug": [
-    "gateway"
-  ],
-  "gateway-debug-port": "40000",
-  "kube_context": "k3d-dev-1",
-  "arch": "arm64",
-  "hmr": true
-}
