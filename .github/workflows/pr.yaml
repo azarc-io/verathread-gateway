@@ -394,6 +394,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          token: ${{ secrets.PAT_TOKEN }}
       - name: "Configure Environment"
         uses: ./.github/actions/configuration
         id: configure
@@ -448,8 +449,6 @@ jobs:
           yq -i '.image.web_repository_tag = "${{ steps.tag.outputs.tag }}"' 'deployment/charts/gateway/values.yaml'
       - name: "Commit Changes"
         run: git add . && git commit -m "Versions updated"
-      - name: "Reset Head"
-        run: git reset --hard
       - name: "Docker Re-Tag FE"
         run: task docker:re-tag
         env:
@@ -479,6 +478,8 @@ jobs:
           zip -r bin/vth-gateway-shell.zip bin/fe
       - name: "Push Git Tag"
         run: git tag ${{ steps.tag.outputs.tag }} && git push origin tag ${{ steps.tag.outputs.tag }}
+      - name: "Reset Head"
+        run: git reset --hard
       - name: "Create Release"
         uses: softprops/action-gh-release@v2
         with:
