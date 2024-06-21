@@ -125,6 +125,11 @@ tasks:
   lint:be:
     desc: "runs lint checks for the backend using golangci"
     cmds:
+      - golangci-lint run
+
+  lint:be:fix:
+    desc: "lints go code using golangci and attempts to apply fixes"
+    cmds:
       - golangci-lint run --fix
 
   lint:fe:
@@ -224,3 +229,18 @@ tasks:
     dir: docs
     cmds:
       - mkdocs build
+
+  ##############################################################################
+  # TESTING
+  ##############################################################################
+
+  test:
+    desc: "runs e2e tests using gotestsum"
+    cmds:
+      - gotestsum --junitfile-testcase-classname=short --jsonfile bin/toolkit_e2e.json --junitfile bin/toolkit_e2e.xml --junitfile-testsuite-name=short --format testname -- -timeout 15m -p 2 -count=1 ./internal/...
+
+  test:ci:unit:
+    desc: "runs e2e tests using gotestsum"
+    cmds:
+      - mkdir -p bin
+      - gotestsum -- -coverprofile=bin/unit.cover.out ./internal/...

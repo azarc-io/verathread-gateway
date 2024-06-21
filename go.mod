@@ -8,6 +8,7 @@ require (
 	github.com/jensneuse/abstractlogger v0.0.4
 	github.com/labstack/echo/v4 v4.12.0
 	github.com/rs/zerolog v1.32.0
+	github.com/stretchr/testify v1.9.0
 	github.com/wundergraph/graphql-go-tools/execution v1.0.3
 	github.com/wundergraph/graphql-go-tools/v2 v2.0.0-rc.46
 	go.opentelemetry.io/otel v1.26.0
@@ -87,7 +88,6 @@ require (
 	github.com/spf13/cast v1.6.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.18.2 // indirect
-	github.com/stretchr/testify v1.9.0 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/tidwall/gjson v1.17.0 // indirect
 	github.com/tidwall/match v1.1.1 // indirect
