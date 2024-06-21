@@ -488,15 +488,8 @@ jobs:
             bin/be/vth-gateway-linux-amd64
             bin/be/vth-gateway-linux-arm64
             bin/vth-gateway-shell.zip
-      - name: "Configure Environment"
-        uses: ./.github/actions/configuration
-        id: configure
-        with:
-          jira-base-url: ${{ secrets.JIRA_BASE_URL }}
-          jira-user-email: ${{ secrets.JIRA_USER_EMAIL }}
-          jira-api-token: ${{ secrets.JIRA_API_TOKEN }}
-          use-sudo: true
-      - uses: dataaxiom/ghcr-cleanup-action@v1
+      - name: "Clean Up Packages"
+        uses: dataaxiom/ghcr-cleanup-action@v1
         with:
           tags: ${{ steps.configure.outputs.issue }}-*
           exclude-tags: 'v*,latest'
