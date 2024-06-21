@@ -1,9 +1,10 @@
 package federation_test
 
 import (
+	"testing"
+
 	"github.com/azarc-io/verathread-gateway/internal/gateway/federation"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestParsesMultipleErrors(t *testing.T) {
