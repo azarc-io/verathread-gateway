@@ -3,7 +3,7 @@
 There are 2 ways you can develop without needing kubernetes 
 but first make sure you meet the requirements and prerequisites below.
 
-### Requirements:
+### Requirements
 
 * Node 20+
 * Go 1.22.2+

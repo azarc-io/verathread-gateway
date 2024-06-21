@@ -20,5 +20,5 @@ It enables the following capabilities for other Azarc mono repo based projects:
     * [x] Federated Subscriptions
 - [x] Statically configured routes
 - [ ] Dynamic routes
-    * [ ] Nats based registration
-    * [ ] GraphQL based registration
+    - [ ] Nats based registration
+    - [ ] GraphQL based registration

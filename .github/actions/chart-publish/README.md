@@ -71,7 +71,7 @@ Following inputs can be used as `step.with` keys:
 | `chart`          | String  | The relative path under $GITHUB_WORKSPACE to the chart (default: 'chart') |
 | `helm_image`           | String  | The Docker image containing Helm (default: 'alpine/helm:3.3.0') |
 | `charts_dir`      | String     | The relative path under $GITHUB_WORKSPACE to publish to |
-| `charts_url`  | String  | The URL of the charts repository (e.g. 'https://janedoe.github.io/helm-charts') |
+| `charts_url`  | String  | The URL of the charts repository (e.g. '<https://janedoe.github.io/helm-charts>') |
 
 ### Outputs
 
