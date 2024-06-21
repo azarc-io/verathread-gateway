@@ -1,0 +1,97 @@
+name: Test Coverage (Main)
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  AWS_REGION: eu-west-2
+  FORCE_COLOR: 1
+  DRY_RUN: false
+  DEPLOY: true
+  RUNNER_ALLOW_RUNASROOT: "1"
+  DOCKER_REGISTRY: ghcr.io/azarc-io/verathread-gateway
+  GOLANGCILINT_VER: "v1.59.1"
+
+concurrency:
+  group: pr-${{ github.ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  unit-tests-be:
+    name: "Unit BE - ${{ matrix.label }}"
+    runs-on: "${{ matrix.os }}"
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target_os: linux
+            target_arch: amd64
+            label: Linux (AMD64)
+          - os: ubuntu-latest
+            target_os: linux
+            target_arch: arm64
+            label: Linux (ARM64)
+    env:
+      GOPRIVATE: "github.com/azarc-io"
+      GOOS: ${{ matrix.target_os }}
+      GOARCH: ${{ matrix.target_arch }}
+    steps:
+      - name: "Checkout"
+        uses: actions/checkout@v4
+      - name: "Setup Go"
+        uses: actions/setup-go@v5
+        with:
+          cache-dependency-path: go.sum
+          go-version-file: go.mod
+      - name: "Setup Task"
+        uses: arduino/setup-task@v2
+        with:
+          version: 3.x
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: "Fix git URL"
+        run: git config --global url."https://x-access-token:${{ secrets.PAT_TOKEN }}@github.com/".insteadOf "https://github.com/"
+      - name: "Test"
+        run: |
+          go install gotest.tools/gotestsum@latest
+          task test:ci:unit
+      - name: "Submit Coverage"
+        run: bash <(curl -Ls https://coverage.codacy.com/get.sh) report --force-coverage-parser go  -r bin/unit.cover.out
+        env:
+          CODACY_API_TOKEN: ${{ secrets.CODACY_API_TOKEN }}
+          CODACY_ORGANIZATION_PROVIDER: gh
+          CODACY_USERNAME: azarc-io
+          CODACY_PROJECT_NAME: verathread-gateway
+
+  integration-tests-be:
+    name: "Integration BE - ${{ matrix.label }}"
+    runs-on: "${{ matrix.os }}"
+    env:
+      GOLANGCILINT_VER: "v1.59.1"
+      GOPRIVATE: "github.com/azarc-io"
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target_os: linux
+            target_arch: amd64
+            label: Linux (AMD64)
+          - os: ubuntu-latest
+            target_os: linux
+            target_arch: arm64
+            label: Linux (ARM64)
+    steps:
+      - name: "Checkout"
+        uses: actions/checkout@v4
+      - name: "Setup Go"
+        uses: actions/setup-go@v5
+        with:
+          cache-dependency-path: go.sum
+          go-version-file: go.mod
+      - name: "Fix git URL"
+        run: git config --global url."https://x-access-token:${{ secrets.PAT_TOKEN }}@github.com/".insteadOf "https://github.com/"
+      - name: "Test"
+        run: echo "TDB"
