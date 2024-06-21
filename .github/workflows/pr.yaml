@@ -161,15 +161,6 @@ jobs:
           DOCKER_REGISTRY: ghcr.io/azarc-io/verathread-gateway
           DOCKER_IMAGE: gateway-be
           DOCKER_VERSION: ${{ steps.configure.outputs.issue }}-${{ github.run_number }}-${{ steps.vars.outputs.sha_short }}
-#      - uses: docker/build-push-action@v5
-#        with:
-#          context: .
-#          platforms: linux/amd64,linux/arm64
-#          file: deployment/docker/app/Dockerfile.multi
-#          push: true
-#          tags: ${{ env.DOCKER_REGISTRY }}/gateway-be:${{ steps.configure.outputs.issue }}-${{ github.run_number }}-${{ steps.vars.outputs.sha_short }}
-#          cache-from: type=gha
-#          cache-to: type=gha,mode=max
       - name: "Upload Artifacts"
         uses: actions/upload-artifact@v4
         with:
@@ -236,6 +227,38 @@ jobs:
         with:
           name: gateway-fe
           path: cmd/web/dist
+
+  test-release:
+    name: "Tmp Test Release"
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Download FE Artifact"
+        uses: actions/download-artifact@v4
+        with:
+          name: gateway-fe
+          path: bin
+      - name: "Download BE Artifact"
+        uses: actions/download-artifact@v4
+        with:
+          name: gateway-be
+          path: bin
+      - name: "Download Docs Artifact"
+        uses: actions/download-artifact@v4
+        with:
+          name: github-pages
+          path: bin
+      - name: "Debug"
+        run: "ls -la bin"
+      - name: "Create Release"
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.24.0
+          generate_release_notes: true
+          repository: azarc-io/verathread-gateway
+          token: ${{ secrets.PAT_TOKEN }}
+          files: |
+            bin/gateway-fe
+            bin/gateway-be
 
   e2e:
     name: "E2E - K8S ${{ matrix.k8s-version }}"
@@ -479,6 +502,16 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: gateway-be
+      - name: "Create Release"
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tag.outputs.tag }}
+          generate_release_notes: true
+          repository: azarc-io/verathread-dev-toolkit
+          token: ${{ secrets.PAT_TOKEN }}
+          files: |
+            bin/gateway-fe
+            bin/gateway-be
 
   chart:
     name: "Release Chart"
@@ -550,8 +583,8 @@ jobs:
   documentation:
     name: Release Documentation
     runs-on: ubuntu-latest
-#    needs:
-#      - release
+    needs:
+      - release
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
