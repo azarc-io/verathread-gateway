@@ -18,8 +18,17 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      - name: Get tag name
+        id: get_tag_name
+        run: |
+          echo "version=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_OUTPUT
+          echo "ref: ${GITHUB_REF/refs\/tags\//}"
+          echo "ref name: ${{ github.ref_name}}"
       - name: "Checkout Gateway"
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.ref_name}}
       - name: "Checkout Helm Chart Repo"
         uses: actions/checkout@v4
         with:
