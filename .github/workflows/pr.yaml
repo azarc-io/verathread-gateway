@@ -86,6 +86,9 @@ jobs:
         run: bash <(curl -Ls https://coverage.codacy.com/get.sh) report --force-coverage-parser go  -r bin/unit.cover.out
         env:
           CODACY_API_TOKEN: ${{ secrets.CODACY_API_TOKEN }}
+          CODACY_ORGANIZATION_PROVIDER: gh
+          CODACY_USERNAME: azarc-io
+          CODACY_PROJECT_NAME: verathread-gateway
       - name: "Cancel Workflow If Failure"
         if: "failure()"
         uses: "andymckay/cancel-action@0.5"
