@@ -71,6 +71,11 @@ jobs:
         with:
           cache-dependency-path: go.sum
           go-version-file: go.mod
+      - name: "Setup Task"
+        uses: arduino/setup-task@v2
+        with:
+          version: 3.x
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
       - name: "Fix git URL"
         run: git config --global url."https://x-access-token:${{ secrets.PAT_TOKEN }}@github.com/".insteadOf "https://github.com/"
       - name: "Test"
