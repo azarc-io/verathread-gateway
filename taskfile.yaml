@@ -242,4 +242,5 @@ tasks:
   test:ci:unit:
     desc: "runs e2e tests using gotestsum"
     cmds:
+      - mkdir -p bin
       - gotestsum -- -coverprofile=bin/unit.cover.out ./internal/...
