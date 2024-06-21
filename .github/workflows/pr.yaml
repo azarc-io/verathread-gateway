@@ -231,6 +231,10 @@ jobs:
   test-release:
     name: "Tmp Test Release"
     runs-on: ubuntu-latest
+    needs:
+      - build-be
+      - build-fe
+      - documentation
     steps:
       - name: "Download FE Artifact"
         uses: actions/download-artifact@v4
