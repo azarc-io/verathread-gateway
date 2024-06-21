@@ -504,3 +504,10 @@ jobs:
             awk '{print $1}' | xargs -I {} gh cache delete {}
         env:
           GH_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+      - name: Merge Pull Request
+        uses: juliangruber/merge-pull-request-action@v1
+        with:
+          github-token: ${{ secrets.PAT_TOKEN }}
+          number: ${{ github.event.pull_request.number }}
+          method: squash
+          repo: juliangruber/octokit-action

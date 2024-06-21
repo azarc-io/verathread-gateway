@@ -111,7 +111,7 @@ All services expose their debug port on `40000` but are mapped to different loca
     If `tilt up` returns an error that the port is in use then use `--port <Number>` to set a different port, this can 
     happen if you are running multiple tilt projects at the same time.
 
-While still in the root of the project run `tilt up` a url will be presented on the command line, click on it to
+While still in the root of the project run `tilt up` an url will be presented on the command line, click on it to
 open the Tilt dashboard, here you can view the status of builds and chart deployments. You can click on any of these
 to view logs, and you can click on the little restart icon to forcefully refresh each one.
 
