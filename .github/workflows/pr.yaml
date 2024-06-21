@@ -253,11 +253,14 @@ jobs:
           path: bin/docs
       - name: "Debug"
         run: |
-          ls -la bin
           cp bin/be/linux-amd64/vth-gateway bin/be/vth-gateway-linux-amd64
           cp bin/be/linux-arm64/vth-gateway bin/be/vth-gateway-linux-arm64
           zip -r bin/docs.zip bin/docs
           zip -r bin/vth-gateway-shell.zip bin/fe
+          ls -la bin
+          ls -la bin/docs
+          ls -la bin/be
+          ls -la bin/fe
       - name: "Create Release"
         uses: softprops/action-gh-release@v2
         with:
