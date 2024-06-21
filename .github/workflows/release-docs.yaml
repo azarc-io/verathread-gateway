@@ -15,29 +15,44 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build:
+  documentation:
+    name: Release Documentation
     runs-on: ubuntu-latest
+    needs:
+      - release
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
     steps:
-      - name: "Checkout"
+      - name: "Checkout Gateway"
         uses: actions/checkout@v4
-      - name: "Checkout Helm Chart Repo"
-        uses: actions/checkout@v4
+      - name: "Setup Pages"
+        uses: actions/configure-pages@v5
+      - name: "Setup Python"
+        uses: actions/setup-python@v5
         with:
-          repository: azarc-io/helm-charts
-          ref: refs/heads/gh-pages
-          path: .helm-chart-repo
-          token: "${{ secrets.HELM_CHARTS_TOKEN }}"
-      - name: "Publish The Helm Chart"
-        id: publish-chart
-        uses: ./.github/actions/chart-publish
+          python-version: '3.9'
+          cache: 'pip'
+          cache-dependency-path: docs/requirements.txt
+      - name: "Install Dependencies"
+        working-directory: docs
+        run: |
+          pip install --upgrade pip
+          pip install mkdocs pymdown-extensions mkdocs-material \
+            mkdocs-extra-sass-plugin mkdocs-minify-plugin mkdocs-redirects livereload mkdocs-glightbox \
+            mkdocs-mermaid2-plugin mkdocs-drawio-file
+      - name: "Build"
+        working-directory: docs
+        run: mkdocs build
+      - name: "Upload artifact"
+        uses: actions/upload-pages-artifact@v3
         with:
-          charts_dir: .helm-chart-repo
-          charts_url: "https://azarc-io.github.io/helm-charts"
-          chart: deployment/charts/gateway
-      - name: "Commit And Push Chart"
-        uses: EndBug/add-and-commit@v9
-        with:
-          author_name: Wael Jammal
-          author_email: wael.jammal@azarc.io
-          cwd: .helm-chart-repo
-          message: "Commit chart ${{ steps.publish-chart.outputs.chart }}"
+          # Upload entire repository
+          path: 'docs/site'
+      - name: "Deploy to GitHub Pages"
+        id: deployment
+        uses: actions/deploy-pages@v4
