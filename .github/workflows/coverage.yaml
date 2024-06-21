@@ -20,24 +20,10 @@ concurrency:
 
 jobs:
   unit-tests-be:
-    name: "Unit BE - ${{ matrix.label }}"
-    runs-on: "${{ matrix.os }}"
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os: ubuntu-latest
-            target_os: linux
-            target_arch: amd64
-            label: Linux (AMD64)
-          - os: ubuntu-latest
-            target_os: linux
-            target_arch: arm64
-            label: Linux (ARM64)
+    name: "Unit BE"
+    runs-on: ubuntu-latest
     env:
       GOPRIVATE: "github.com/azarc-io"
-      GOOS: ${{ matrix.target_os }}
-      GOARCH: ${{ matrix.target_arch }}
     steps:
       - name: "Checkout"
         uses: actions/checkout@v4
@@ -66,23 +52,11 @@ jobs:
           CODACY_PROJECT_NAME: verathread-gateway
 
   integration-tests-be:
-    name: "Integration BE - ${{ matrix.label }}"
-    runs-on: "${{ matrix.os }}"
+    name: "Integration BE"
+    runs-on: ubuntu-latest
     env:
       GOLANGCILINT_VER: "v1.59.1"
       GOPRIVATE: "github.com/azarc-io"
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os: ubuntu-latest
-            target_os: linux
-            target_arch: amd64
-            label: Linux (AMD64)
-          - os: ubuntu-latest
-            target_os: linux
-            target_arch: arm64
-            label: Linux (ARM64)
     steps:
       - name: "Checkout"
         uses: actions/checkout@v4
