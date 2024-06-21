@@ -1,0 +1,12 @@
+{
+  "name": "documentation",
+  "version": "0.0.0",
+  "scripts": {
+
+  },
+  "private": true,
+  "dependencies": {
+    "@azarc/sdk": "^1.0.1-beta.12"
+  },
+  "devDependencies": {}
+}

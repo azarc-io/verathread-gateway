@@ -1,0 +1,21 @@
+{{- define "service-library-chart.service-web" }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "service.fullname" . }}-web
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+    app: {{ include "service.fullname" . }}
+spec:
+  ports:
+    {{- if .Values.hmr }}
+    - port: {{ .Values.bind.hmr }}
+      name: http
+    {{- else }}
+    - port: {{ .Values.bind.http }}
+      name: http
+    {{- end }}
+  clusterIP: None
+  selector:
+    {{- include "service.selectorLabels" . | nindent 4 }}
+{{- end }}

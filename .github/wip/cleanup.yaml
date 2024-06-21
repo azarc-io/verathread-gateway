@@ -1,0 +1,28 @@
+name: Clean Up
+
+on:
+  pull_request:
+    branches: [ 'main' ]
+    types:
+      - opened
+      - synchronize
+
+env:
+  RUNNER_ALLOW_RUNASROOT: "1"
+
+jobs:
+  cleanup-registry:
+    name: "Clean up registry"
+    runs-on: ubuntu-latest
+    env:
+      GOLANGCILINT_VER: "v1.59.1"
+      GOPRIVATE: "github.com/azarc-io"
+    steps:
+      - uses: dataaxiom/ghcr-cleanup-action@v1
+        with:
+          tags: VTHP-1940-*
+          exclude-tags: 'v*,latest'
+          token: ${{ secrets.GITHUB_TOKEN }}
+          owner: azarc-io
+          package: verathread-gateway/gateway-be
+          log-level: debug

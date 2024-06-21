@@ -1,0 +1,12 @@
+NAMESPACE=<eg. wael-dev must match toolkit namespace if used>
+
+BIND_ADDRESS=127.0.0.1
+NATS_ADDRESS=nats://127.0.0.1:4222
+
+AUTH_DOMAIN=<REQUEST FROM ANOTHER DEV>
+AUTH_CLIENT_ID=<REQUEST FROM ANOTHER DEV>
+AUTH_CLIENT_SECRET=<REQUEST FROM ANOTHER DEV>
+
+PROJECT_BASE_DIR=/<ABSOLUTE PATH>/verathread-gateway
+DAPRD_BINARY=https://github.com/azarc-io/dapr/releases/download/v1.0.1/daprd_darwin_arm64.tar.gz
+DAPRD_BIN_PATH=/<ABSOLUTE PATH>/verathread-cloud/.data/bin

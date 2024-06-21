@@ -1,0 +1,224 @@
+name: action-slack
+description: You can notify slack of GitHub Actions.
+author: 8398a7
+inputs:
+  template:
+    description: Slack message template (error, success, deployed, ready_for_qa, released)
+    required: true
+    default: success
+  title:
+    description: Message Title
+    required: true
+  header:
+    description: Message Header
+    required: true
+  ticket:
+    description: Jira Ticket
+    required: true
+  token:
+    description: Slack Token
+    required: true
+  fe_url:
+    description: Frontend URL used when template type is deployed
+    required: false
+runs:
+  using: "composite"
+  steps:
+    - id: find-pull-request
+      uses: jwalton/gh-find-current-pr@v1
+      with:
+        # Can be "open", "closed", or "all".  Defaults to "open".
+        state: open
+    - uses: 8398a7/action-slack@v3
+      if: inputs.template == 'error'
+      with:
+        status: custom
+        fields: repo,message,commit,author,action,eventName,ref,workflow,job,took,pullRequest,workflow,sender
+        custom_payload: |
+          {
+            "text": "${{ inputs.title }}",
+            "blocks": [
+              {
+                "type": "section",
+                "text": {
+                  "type": "plain_text",
+                  "text": "${{ inputs.header }}",
+                  "emoji": true
+                }
+              }
+            ],
+            "attachments": [
+              {
+                "color": "#c33124",
+                "blocks": [
+                  {
+                    "type": "section",
+                    "fields": [
+                      {
+                        "type": "mrkdwn",
+                        "text": "*Ticket:* ${{ inputs.ticket }}"
+                      },
+                      {
+                        "type": "mrkdwn",
+                        "text": "*Status:* ${{ job.status }}"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "color": "#1982c4",
+                "blocks": [
+                  {
+                    "type": "section",
+                    "fields": [
+                      {
+                        "type": "mrkdwn",
+                        "text": "*Author:* ${{ github.event.sender.login }}"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "actions",
+                    "elements": [
+                      {
+                        "type": "button",
+                        "text": {
+                          "type": "plain_text",
+                          "text": "Job",
+                          "emoji": true
+                        },
+                        "action_id": "checks_1",
+                        "url": "${{github.server_url}}/${{github.repository}}/actions/runs/${{github.run_id}}"
+                      },
+                      {
+                        "type": "button",
+                        "text": {
+                          "type": "plain_text",
+                          "text": "Repo",
+                          "emoji": true
+                        },
+                        "action_id": "checks_2",
+                        "url": "${{github.server_url}}/${{github.repository}}"
+                      },
+                      {
+                        "type": "button",
+                        "text": {
+                          "type": "plain_text",
+                          "text": "PR",
+                          "emoji": true
+                        },
+                        "action_id": "checks_3",
+                        "url": "${{github.server_url}}/${{github.repository}}/pull/${{ steps.find-pull-request.outputs.number }}"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+      env:
+        SLACK_WEBHOOK_URL: ${{ inputs.token }}
+    - uses: 8398a7/action-slack@v3
+      if: inputs.template == 'deployed'
+      with:
+        status: custom
+        fields: repo,message,commit,author,action,eventName,ref,workflow,job,took,pullRequest,workflow,sender
+        custom_payload: |
+          {
+            "text": "${{ inputs.title }}",
+            "blocks": [
+              {
+                "type": "section",
+                "text": {
+                  "type": "plain_text",
+                  "text": "${{ inputs.header }}",
+                  "emoji": true
+                }
+              }
+            ],
+            "attachments": [
+              {
+                "color": "#8ac926",
+                "blocks": [
+                  {
+                    "type": "section",
+                    "fields": [
+                      {
+                        "type": "mrkdwn",
+                        "text": "*Ticket:* ${{ inputs.ticket }}"
+                      },
+                      {
+                        "type": "mrkdwn",
+                        "text": "*Status:* ${{ job.status }}"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "color": "#1982c4",
+                "blocks": [
+                  {
+                    "type": "section",
+                    "fields": [
+                      {
+                        "type": "mrkdwn",
+                        "text": "*Author:* ${{ github.event.pusher.email }}"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "actions",
+                    "elements": [
+                      {
+                        "type": "button",
+                        "text": {
+                          "type": "plain_text",
+                          "text": "UI",
+                          "emoji": true
+                        },
+                        "action_id": "checks_1",
+                        "url": "${{inputs.fe_url}}"
+                      },
+                      {
+                        "type": "button",
+                        "text": {
+                          "type": "plain_text",
+                          "text": "Job",
+                          "emoji": true
+                        },
+                        "action_id": "checks_11",
+                        "url": "${{github.server_url}}/${{github.repository}}/actions/runs/${{github.run_id}}"
+                      },
+                      {
+                        "type": "button",
+                        "text": {
+                          "type": "plain_text",
+                          "text": "Repo",
+                          "emoji": true
+                        },
+                        "action_id": "checks_12",
+                        "url": "${{github.server_url}}/${{github.repository}}"
+                      },
+                      {
+                        "type": "button",
+                        "text": {
+                          "type": "plain_text",
+                          "text": "PR",
+                          "emoji": true
+                        },
+                        "action_id": "checks_13",
+                        "url": "${{github.server_url}}/${{github.repository}}/pull/${{ steps.find-pull-request.outputs.number }}"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+      env:
+        SLACK_WEBHOOK_URL: ${{ inputs.token }}
+branding:
+  icon: bell
+  color: blue

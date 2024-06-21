@@ -1,0 +1,226 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+
+version: '3'
+
+##############################################################################
+# DOT ENV SUPPORT
+##############################################################################
+
+dotenv:
+  - .env
+
+env:
+  BINARY_NAME: vth-gateway
+  GIT_REPO: https://github.com/azarc-io/verathread-gateway
+
+tasks:
+  ##############################################################################
+  # DEV
+  ##############################################################################
+
+  dev:
+    desc: "runs both the backend and frontend in local dev mode"
+    deps:
+      - dev:be
+      - dev:fe
+    cmds:
+      - echo "finished"
+
+  dev:be:
+    desc: "builds the backend with hot reloading"
+    prefix: gateway
+    method: none
+    cmds:
+      - fswatch -config .fsw.task.yml
+    env:
+      CONFIG_DIR: cmd/app/config
+      BASE_CONTEXT: base
+      DAPR_GRPC_PORT: 6011
+      MONGO_HOST: localhost
+
+  dev:fe:
+    desc: "starts the front end in dev mode with hmr support"
+    dir: cmd/web
+    cmds:
+      - yarn dev
+
+  ##############################################################################
+  # BUILD
+  ##############################################################################
+
+  build:be:multi:
+    desc: "builds the backend for all platforms concurrently"
+    deps:
+      - task: build:be
+        vars:
+          GOOS: linux
+          GOARCH: amd64
+      - task: build:be
+        vars:
+          GOOS: linux
+          GOARCH: arm64
+    cmd: echo "finished building"
+
+  build:be:
+    desc: "builds the backend"
+    cmds:
+      - CGO_ENABLED=0 GOOS={{.GOOS}} GOARCH={{.GOARCH}} go build -ldflags='-extldflags=-static -w -s' -o bin/{{.GOOS}}-{{.GOARCH}}/vth-gateway cmd/app/main.go
+    vars:
+      GOOS: '{{default "linux" .GOOS}}'
+      GOARCH: '{{default "amd64" .GOARCH}}'
+
+  build:fe:
+    desc: "builds the frontend for production"
+    dir: cmd/web
+    cmds:
+      - yarn build
+
+  ##############################################################################
+  # DOCKER
+  ##############################################################################
+
+  docker:build:multi:
+    desc: "builds a docker image"
+    cmds:
+      - |
+        docker buildx build . -t $DOCKER_REGISTRY/$DOCKER_IMAGE:$DOCKER_VERSION \
+          --platform $PLATFORM \
+          --build-arg BINARY=bin/$PLATFORM_OS-$PLATFORM_ARCH/$BINARY_NAME \
+          --label="org.opencontainers.image.description=Verathread Gateway" \
+          --label="org.opencontainers.image.created={{now}}" \
+          --label="org.opencontainers.image.name=$DOCKER_IMAGE" \
+          --label="org.opencontainers.image.revision={{.GIT_COMMIT}}" \
+          --label="org.opencontainers.image.version=$DOCKER_VERSION" \
+          --label="org.opencontainers.image.source=$GIT_REPO" \
+          --annotation="index:org.opencontainers.image.description=Verathread Gateway Multi Platform Image" \
+          --cache-from type=gha \
+          --cache-to type=gha,mode=max \
+          --push \
+          -f $DOCKERFILE
+    env:
+      DOCKER_REGISTRY: "k3d-local-registry:5000"
+      DOCKER_IMAGE: "gateway-be"
+      DOCKER_VERSION: "dev"
+      PLATFORM: "linux/amd64,linux/arm64"
+      DOCKERFILE: "deployment/docker/app/Dockerfile.multi"
+      BUILDX_NO_DEFAULT_ATTESTATIONS: 1
+    vars:
+      GIT_COMMIT:
+        sh: git log -n 1 --format=%h
+
+  docker:re-tag:
+    desc: "re-tags a docker image"
+    cmds:
+      - docker buildx imagetools create -t $DOCKER_REGISTRY/$DOCKER_IMAGE:$TARGET_VERSION $DOCKER_REGISTRY/$DOCKER_IMAGE:$SOURCE_VERSION
+    env:
+      DOCKER_REGISTRY: "localhost:5000"
+      DOCKER_IMAGE: "gateway-be"
+      TARGET_VERSION: "dev"
+      SOURCE_VERSION: "dev"
+
+  ##############################################################################
+  # LINT
+  ##############################################################################
+
+  lint:be:
+    desc: "runs lint checks for the backend using golangci"
+    cmds:
+      - golangci-lint run --fix
+
+  lint:fe:
+    desc: "runs lint checks for the frontend"
+    dir: cmd/web
+    cmds:
+      - yarn lint
+
+  ##############################################################################
+  # TEST
+  ##############################################################################
+
+  test:fe:
+    desc: "runs tests for the frontend"
+    dir: cmd/web
+    cmds:
+      - echo "not implemented yet"
+
+  ##############################################################################
+  # CI
+  ##############################################################################
+
+  ci:fe:install:
+    desc: "installs dependencies for ci"
+    dir: cmd/web
+    cmds:
+      - yarn install --prefer-offline --frozen-lockfile --non-interactive
+
+
+  ##############################################################################
+  # SETUP
+  ##############################################################################
+
+  setup:
+    desc: "run this if you are starting with a fresh checkout, see documentation for configuration instructions"
+    cmds:
+      - curl -fsSL https://raw.githubusercontent.com/tilt-dev/tilt/master/scripts/install.sh | bash
+      - task: setup:tilt:template
+      - task: setup:env:template
+      - task: dapr:install
+
+  setup:tilt:template:
+    desc: "copies the tilt config template to the root of the project, will not overwrite if existing"
+    internal: true
+    cmds:
+      - cp deployment/template/_tilt_config.json tilt_config.json
+    status:
+      - test -f ./tilt_config.json
+
+  setup:env:template:
+    desc: "copies the .env template to the root of the project, will not overwrite if existing"
+    internal: true
+    cmds:
+      - cp deployment/template/env .env
+    status:
+      - test -f ./.env
+
+  ##############################################################################
+  # DAPR
+  ##############################################################################
+
+  dapr:install:
+    desc: "downloads dapr binary for local dev"
+    internal: true
+    cmds:
+      - mkdir -p .data/bin
+      - wget https://github.com/azarc-io/dapr/releases/download/v1.0.1/daprd_{{OS}}_{{ARCH}}.tar.gz
+      - tar zxvpf daprd_{{OS}}_{{ARCH}}.tar.gz
+      - rm daprd_{{OS}}_{{ARCH}}.tar.gz
+      - mv daprd ./.data/bin/daprd-{{ARCH}}
+      - go install github.com/codeskyblue/fswatch@latest
+    status:
+      - test -f ./.data/bin/daprd-{{ARCH}}
+
+  ##############################################################################
+  # DOCS
+  ##############################################################################
+
+  docs:install:deps:
+    desc: "installs python dependencies for mkdocs - requires python 3+"
+    dir: docs
+    cmds:
+      - |
+        pip install \
+          mkdocs pymdown-extensions mkdocs-material \
+          mkdocs-extra-sass-plugin mkdocs-minify-plugin mkdocs-redirects livereload mkdocs-glightbox \
+          mkdocs-mermaid2-plugin mkdocs-drawio-file
+
+  docs:serve:
+    desc: "builds and serves documentation"
+    dir: docs
+    cmds:
+      - mkdocs serve
+
+  docs:build:
+    desc: "builds documentation and outputs to docs/site"
+    dir: docs
+    cmds:
+      - mkdocs build

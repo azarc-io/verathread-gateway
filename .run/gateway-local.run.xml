@@ -1,0 +1,27 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="gateway-local" type="GoApplicationRunConfiguration" factoryName="Go Application">
+    <module name="verathread-gateway" />
+    <working_directory value="$PROJECT_DIR$" />
+    <envs>
+      <env name="BASE_CONTEXT" value="base" />
+      <env name="CONFIG_DIR" value="cmd/app/config" />
+      <env name="DAPR_GRPC_PORT" value="6011" />
+    </envs>
+    <EXTENSION ID="net.ashald.envfile">
+      <option name="IS_ENABLED" value="true" />
+      <option name="IS_SUBST" value="false" />
+      <option name="IS_PATH_MACRO_SUPPORTED" value="false" />
+      <option name="IS_IGNORE_MISSING_FILES" value="false" />
+      <option name="IS_ENABLE_EXPERIMENTAL_INTEGRATIONS" value="false" />
+      <ENTRIES>
+        <ENTRY IS_ENABLED="true" PARSER="runconfig" IS_EXECUTABLE="false" />
+        <ENTRY IS_ENABLED="true" PARSER="env" IS_EXECUTABLE="false" PATH=".env" />
+      </ENTRIES>
+    </EXTENSION>
+    <kind value="PACKAGE" />
+    <package value="github.com/azarc-io/verathread-gateway/cmd/app" />
+    <directory value="$PROJECT_DIR$" />
+    <filePath value="$PROJECT_DIR$/cmd/app/main.go" />
+    <method v="2" />
+  </configuration>
+</component>
