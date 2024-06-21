@@ -510,4 +510,4 @@ jobs:
           github-token: ${{ secrets.PAT_TOKEN }}
           number: ${{ github.event.pull_request.number }}
           method: squash
-          repo: juliangruber/octokit-action
+          repo: azarc-io/verathread-gateway
