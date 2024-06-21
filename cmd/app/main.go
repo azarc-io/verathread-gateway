@@ -77,6 +77,7 @@ func main() {
 	}
 
 	// Tracing use case
+	// TODO re-enable once metrics and traces are enabled for the metrics agent
 	// a.tracing = tracinguc.NewZipkinTracer(
 	//	tracinguc.WithServiceName(cfg.Name),
 	//	tracinguc.WithUrl("http://localhost:9411/api/v2/spans"),

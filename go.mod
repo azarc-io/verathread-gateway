@@ -3,7 +3,7 @@ module github.com/azarc-io/verathread-gateway
 go 1.22.2
 
 require (
-	github.com/azarc-io/verathread-next-common v1.0.1-beta.19
+	github.com/azarc-io/verathread-next-common v1.0.1-beta.20
 	github.com/gobwas/ws v1.3.1
 	github.com/jensneuse/abstractlogger v0.0.4
 	github.com/labstack/echo/v4 v4.12.0
@@ -21,6 +21,7 @@ require (
 	github.com/auth0/go-auth0 v1.4.1 // indirect
 	github.com/auth0/go-jwt-middleware/v2 v2.2.1 // indirect
 	github.com/buger/jsonparser v1.1.1 // indirect
+	github.com/cenkalti/backoff/v4 v4.2.1 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/dapr/dapr v1.13.0 // indirect
 	github.com/dapr/go-sdk v1.10.1 // indirect
