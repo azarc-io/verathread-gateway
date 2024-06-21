@@ -1,4 +1,4 @@
-# IDE Local Development
+# Local Development
 
 There are 2 ways you can develop without needing kubernetes 
 but first make sure you meet the requirements and prerequisites below.

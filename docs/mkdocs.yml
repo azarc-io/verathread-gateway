@@ -51,10 +51,8 @@ nav:
 - About: about.md
 - Getting Started:
   - gs_setup.md
-- Developing With Tilt (K8S):
-  - tilt_prepare.md
-  - tilt_usage.md
-- Developing With IDE: ide.md
+  - Developing With Tilt (K8S): tilt.md
+  - Developing Locally (Bare Metal): ide.md
 - Community:
     - contributing.md
 

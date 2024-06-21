@@ -159,13 +159,12 @@ tasks:
   ##############################################################################
 
   setup:
-    desc: "run this if you are starting with a fresh checkout, see readme for configuration instructions"
+    desc: "run this if you are starting with a fresh checkout, see documentation for configuration instructions"
     cmds:
       - curl -fsSL https://raw.githubusercontent.com/tilt-dev/tilt/master/scripts/install.sh | bash
       - task: setup:tilt:template
       - task: setup:env:template
       - task: dapr:install
-      - task: k3d:install
 
   setup:tilt:template:
     desc: "copies the tilt config template to the root of the project, will not overwrite if existing"
@@ -182,48 +181,6 @@ tasks:
       - cp deployment/template/env .env
     status:
       - test -f ./.env
-
-  ##############################################################################
-  # K3D
-  ##############################################################################
-
-  k3d:install:
-    cmds:
-      - curl -s https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | TAG=$TAG bash
-    env:
-      TAG: v5.6.3
-
-  k3d:create:
-    desc: "Creates a new cluster, only run this if you don't have an existing cluster"
-    cmds:
-      - k3d cluster create --config deployment/k3d/cluster.yaml
-
-  k3d:start:
-    desc: "Starts the cluster but only if it was previously stopped using k3d:stop"
-    cmds:
-      - k3d cluster start dev-1
-
-  k3d:stop:
-    desc: "Stops the cluster"
-    cmds:
-      - k3d cluster stop dev-1
-
-  k3d:delete:
-    desc: "Destroys the cluster"
-    cmds:
-      - k3d cluster delete dev-1
-
-  k3d:install:charts:
-    desc: "Installs dependency charts, called automatically when using k3d:create, you can call this to update the charts"
-    cmds:
-      - helm upgrade --install dapr --create-namespace ./deployment/charts/dapr  --namespace dapr-system --wait
-      - helm upgrade --install nats --create-namespace ./deployment/charts/nats  --namespace $NAMESPACE --wait
-
-  k3d:delete:charts:
-    desc: "Deletes all the charts installed by k3d:install:charts"
-    cmds:
-      - helm delete dapr --namespace dapr-system
-      - helm delete nats --namespace $NAMESPACE
 
   ##############################################################################
   # DAPR
