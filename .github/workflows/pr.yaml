@@ -512,7 +512,7 @@ jobs:
           number: ${{ github.event.pull_request.number }}
           method: squash
           repo: azarc-io/verathread-gateway
-      - name: "Clean Up Packages"
+      - name: "Clean Up BE Packages"
         uses: dataaxiom/ghcr-cleanup-action@v1
         with:
           tags: ${{ steps.configure.outputs.issue }}-*
@@ -520,6 +520,15 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           owner: azarc-io
           package: verathread-gateway/gateway-be
+          log-level: debug
+      - name: "Clean Up FE Packages"
+        uses: dataaxiom/ghcr-cleanup-action@v1
+        with:
+          tags: ${{ steps.configure.outputs.issue }}-*
+          exclude-tags: 'v*,latest'
+          token: ${{ secrets.GITHUB_TOKEN }}
+          owner: azarc-io
+          package: verathread-gateway/gateway-fe
           log-level: debug
       - name: "Delete GoReleaser Caches"
         run: |
