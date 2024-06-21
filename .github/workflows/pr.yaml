@@ -382,7 +382,7 @@ jobs:
             --set image.web_repository_tag=${{ steps.vars.outputs.docker_tag }}
 
   release:
-    name: "Prepare Release"
+    name: "Release"
     runs-on: ubuntu-latest
     environment: production
     outputs:
@@ -466,10 +466,17 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: gateway-fe
+          path: bin/fe
       - name: "Download BE Artifact"
         uses: actions/download-artifact@v4
         with:
           name: gateway-be
+          path: bin/be
+      - name: "Generate Packages"
+        run: |
+          cp bin/be/linux-amd64/vth-gateway bin/be/vth-gateway-linux-amd64
+          cp bin/be/linux-arm64/vth-gateway bin/be/vth-gateway-linux-arm64
+          zip -r bin/vth-gateway-shell.zip bin/fe
       - name: "Create Release"
         uses: softprops/action-gh-release@v2
         with:
@@ -478,52 +485,9 @@ jobs:
           repository: azarc-io/verathread-dev-toolkit
           token: ${{ secrets.PAT_TOKEN }}
           files: |
-            bin/gateway-fe
-            bin/gateway-be
-
-  chart:
-    name: "Release Chart"
-    runs-on: ubuntu-latest
-    needs:
-      - release
-    steps:
-      - name: "Checkout Gateway"
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          ref: ${{ needs.release.outputs.version }}
-      - name: "Checkout Helm Chart Repo"
-        uses: actions/checkout@v4
-        with:
-          repository: azarc-io/helm-charts
-          ref: refs/heads/gh-pages
-          path: .helm-chart-repo
-          token: "${{ secrets.HELM_CHARTS_TOKEN }}"
-      - name: "Publish The Helm Chart"
-        id: publish-chart
-        uses: ./.github/actions/chart-publish
-        with:
-          charts_dir: .helm-chart-repo
-          charts_url: "https://azarc-io.github.io/helm-charts"
-          chart: deployment/charts/gateway
-      - name: "Commit And Push Chart"
-        uses: EndBug/add-and-commit@v9
-        with:
-          author_name: Wael Jammal
-          author_email: wael.jammal@azarc.io
-          cwd: .helm-chart-repo
-          message: "Commit chart ${{ steps.publish-chart.outputs.chart }}"
-
-  cleanup:
-    name: "Clean Up"
-    runs-on: ubuntu-latest
-    needs:
-      - release
-    steps:
-      - name: "Checkout Gateway"
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+            bin/be/vth-gateway-linux-amd64
+            bin/be/vth-gateway-linux-arm64
+            bin/vth-gateway-shell.zip
       - name: "Configure Environment"
         uses: ./.github/actions/configuration
         id: configure
@@ -547,93 +511,3 @@ jobs:
             awk '{print $1}' | xargs -I {} gh cache delete {}
         env:
           GH_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
-
-  documentation:
-    name: Release Documentation
-    runs-on: ubuntu-latest
-    needs:
-      - release
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    permissions:
-      contents: read
-      pages: write
-      id-token: write
-    steps:
-      - name: "Checkout Gateway"
-        uses: actions/checkout@v4
-      - name: "Setup Pages"
-        uses: actions/configure-pages@v5
-      - name: "Setup Python"
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.9'
-          cache: 'pip'
-          cache-dependency-path: docs/requirements.txt
-      - name: "Install Dependencies"
-        working-directory: docs
-        run: |
-          pip install --upgrade pip
-          pip install mkdocs pymdown-extensions mkdocs-material \
-            mkdocs-extra-sass-plugin mkdocs-minify-plugin mkdocs-redirects livereload mkdocs-glightbox \
-            mkdocs-mermaid2-plugin mkdocs-drawio-file
-      - name: "Build"
-        working-directory: docs
-        run: mkdocs build
-      - name: "Upload artifact"
-        uses: actions/upload-pages-artifact@v3
-        with:
-          # Upload entire repository
-          path: 'docs/site'
-      - name: "Deploy to GitHub Pages"
-        id: deployment
-        uses: actions/deploy-pages@v4
-
-  merge:
-    name: Merge PR
-    runs-on: ubuntu-latest
-    needs:
-      - documentation
-      - cleanup
-      - chart
-    steps:
-      - name: merge
-        uses: nbrugger-tgm/merge-pr-action@v0.2.3
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          method: squash
-          pull_request: ${{ github.event.pull_request.number }}
-      - name: "Download FE Artifact"
-        uses: actions/download-artifact@v4
-        with:
-          name: gateway-fe
-          path: bin/fe
-      - name: "Download BE Artifact"
-        uses: actions/download-artifact@v4
-        with:
-          name: gateway-be
-          path: bin/be
-      - name: "Download Docs Artifact"
-        uses: actions/download-artifact@v4
-        with:
-          name: github-pages
-          path: bin/docs
-      - name: "Generate Packages"
-        run: |
-          cp bin/be/linux-amd64/vth-gateway bin/be/vth-gateway-linux-amd64
-          cp bin/be/linux-arm64/vth-gateway bin/be/vth-gateway-linux-arm64
-          zip -r bin/docs.zip bin/docs
-          zip -r bin/vth-gateway-shell.zip bin/fe
-      - name: "Create Release"
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v1.24.0
-          generate_release_notes: true
-          repository: azarc-io/verathread-gateway
-          token: ${{ secrets.PAT_TOKEN }}
-          files: |
-            bin/be/vth-gateway-linux-amd64
-            bin/be/vth-gateway-linux-arm64
-            bin/docs.zip
-            bin/vth-gateway-shell.zip
