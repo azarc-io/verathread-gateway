@@ -484,7 +484,7 @@ jobs:
         with:
           tag_name: ${{ steps.tag.outputs.tag }}
           generate_release_notes: true
-          repository: azarc-io/verathread-dev-toolkit
+          repository: azarc-io/verathread-gateway
           token: ${{ secrets.PAT_TOKEN }}
           files: |
             bin/be/vth-gateway-linux-amd64
