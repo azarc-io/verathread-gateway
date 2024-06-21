@@ -228,48 +228,6 @@ jobs:
           name: gateway-fe
           path: cmd/web/dist
 
-  test-release:
-    name: "Tmp Test Release"
-    runs-on: ubuntu-latest
-    needs:
-      - build-be
-      - build-fe
-      - documentation
-    steps:
-      - name: "Download FE Artifact"
-        uses: actions/download-artifact@v4
-        with:
-          name: gateway-fe
-          path: bin/fe
-      - name: "Download BE Artifact"
-        uses: actions/download-artifact@v4
-        with:
-          name: gateway-be
-          path: bin/be
-      - name: "Download Docs Artifact"
-        uses: actions/download-artifact@v4
-        with:
-          name: github-pages
-          path: bin/docs
-      - name: "Generate Packages"
-        run: |
-          cp bin/be/linux-amd64/vth-gateway bin/be/vth-gateway-linux-amd64
-          cp bin/be/linux-arm64/vth-gateway bin/be/vth-gateway-linux-arm64
-          zip -r bin/docs.zip bin/docs
-          zip -r bin/vth-gateway-shell.zip bin/fe
-      - name: "Create Release"
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v1.24.0
-          generate_release_notes: true
-          repository: azarc-io/verathread-gateway
-          token: ${{ secrets.PAT_TOKEN }}
-          files: |
-            bin/be/vth-gateway-linux-amd64
-            bin/be/vth-gateway-linux-arm64
-            bin/docs.zip
-            bin/vth-gateway-shell.zip
-
   e2e:
     name: "E2E - K8S ${{ matrix.k8s-version }}"
     runs-on: ubuntu-latest
@@ -593,8 +551,8 @@ jobs:
   documentation:
     name: Release Documentation
     runs-on: ubuntu-latest
-#    needs:
-#      - release
+    needs:
+      - release
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -646,3 +604,36 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           method: squash
           pull_request: ${{ github.event.pull_request.number }}
+      - name: "Download FE Artifact"
+        uses: actions/download-artifact@v4
+        with:
+          name: gateway-fe
+          path: bin/fe
+      - name: "Download BE Artifact"
+        uses: actions/download-artifact@v4
+        with:
+          name: gateway-be
+          path: bin/be
+      - name: "Download Docs Artifact"
+        uses: actions/download-artifact@v4
+        with:
+          name: github-pages
+          path: bin/docs
+      - name: "Generate Packages"
+        run: |
+          cp bin/be/linux-amd64/vth-gateway bin/be/vth-gateway-linux-amd64
+          cp bin/be/linux-arm64/vth-gateway bin/be/vth-gateway-linux-arm64
+          zip -r bin/docs.zip bin/docs
+          zip -r bin/vth-gateway-shell.zip bin/fe
+      - name: "Create Release"
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.24.0
+          generate_release_notes: true
+          repository: azarc-io/verathread-gateway
+          token: ${{ secrets.PAT_TOKEN }}
+          files: |
+            bin/be/vth-gateway-linux-amd64
+            bin/be/vth-gateway-linux-arm64
+            bin/docs.zip
+            bin/vth-gateway-shell.zip
