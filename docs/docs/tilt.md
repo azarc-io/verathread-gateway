@@ -118,6 +118,10 @@ to view logs, and you can click on the little restart icon to forcefully refresh
 Once everything is running you can start coding, when you make changes to the backend or front end code your changes will
 be hot reloaded and synced to kubernetes, the process is quite quick when running locally.
 
+!!! tip
+
+    You can now access the web interface at [http://dev.cluster.local](http://dev.cluster.local)
+
 ##### Tearing down the stack
 
 You can run `tilt down` to destroy everything that was deployed using `tilt up`, this will not remove anything
