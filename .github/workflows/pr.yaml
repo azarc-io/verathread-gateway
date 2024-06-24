@@ -166,7 +166,7 @@ jobs:
         run: git config --global url."https://x-access-token:${{ secrets.PAT_TOKEN }}@github.com/".insteadOf "https://github.com/"
       - name: "Calculate Variables"
         id: vars
-        run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+        run: echo "sha_short=`echo ${{ github.event.pull_request.head.sha }} | cut -c1-8`" >> $GITHUB_OUTPUT
       - name: "Build"
         run: task build:be:multi
       - name: "Build Docker"
@@ -220,7 +220,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: "Calculate Variables"
         id: vars
-        run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+        run: echo "sha_short=`echo ${{ github.event.pull_request.head.sha }} | cut -c1-8`" >> $GITHUB_OUTPUT
       - name: "Yarn Install"
         run: task ci:fe:install
       - name: "Lint"
@@ -341,7 +341,7 @@ jobs:
           version: v3.3.4
       - name: "Calculate Variables"
         id: vars
-        run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+        run: echo "sha_short=`echo ${{ github.event.pull_request.head.sha }} | cut -c1-8`" >> $GITHUB_OUTPUT
 
   qa:
     name: "Promote To QA"
@@ -365,8 +365,9 @@ jobs:
       - name: "Calculate Variables"
         id: vars
         run: |
-          echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
-          echo "docker_tag=${{ steps.configure.outputs.issue }}-${{ github.run_number }}-$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+          sha_short=`echo ${{ github.event.pull_request.head.sha }} | cut -c1-8`
+          echo "sha_short=${sha_short}" >> $GITHUB_OUTPUT
+          echo "docker_tag=${{ steps.configure.outputs.issue }}-${{ github.run_number }}-${sha_short}" >> $GITHUB_OUTPUT
           mkdir -p ~/.kube && echo "${{ secrets.KUBECONFIG_DEV }}" | base64 -d > ~/.kube/config
           chmod go-r ~/.kube/config
       - name: "Install Kubectl"
@@ -442,7 +443,7 @@ jobs:
           git config --global user.name "CI"
       - name: "Calculate Variables"
         id: vars
-        run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+        run: echo "sha_short=`echo ${{ github.event.pull_request.head.sha }} | cut -c1-8`" >> $GITHUB_OUTPUT
       - name: "Create Release Tag"
         uses: anothrNick/github-tag-action@1.67.0
         id: tag
