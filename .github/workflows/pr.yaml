@@ -527,7 +527,7 @@ jobs:
 
       - name: "Push Git Tag - After Squash"
         run: |
-          git pull origin
+          git fetch origin
           git checkout origin/${{github.event.pull_request.base.ref}}
           git tag ${{ steps.tag.outputs.tag }}
           git push origin tag ${{ steps.tag.outputs.tag }}
