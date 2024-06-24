@@ -8,6 +8,11 @@
     If you have already setup the toolkit then you can skip the `Task.dev` step below and jump to the
     [Initial Setup](#initial-setup) step.
 
+### Requirements
+
+- [Docker](https://www.docker.com/products/docker-desktop/)
+- [Docker Compose](https://docs.docker.com/compose/) - *Not required if using Tilt method*
+
 ### Task.dev CLI
 
 This is a replacement for make, it provides a much simpler syntax and is well documented.
@@ -45,6 +50,11 @@ go install github.com/go-task/task/v3/cmd/task@latest
 
 Using the task cli run the following command
 
+!!! note
+
+    You might be prompted for a password, this is your os password, set up will try to install some tooling that requires
+    elevated permissions.
+
 ```shell
 task setup
 ```
@@ -71,5 +81,11 @@ Here are some descriptions of important environment settings:
 - TILT_ARCH: Set this to `amd64` if you are on an intel machine otherwise set it to `arm64`
 
 ### Pick a dev pipeline
+
+!!! warning
+
+    Please note that you can not run both appraoches concurrently, if you want to develop using tilt then
+    you must stop anything started in the other for eg. by running `docker-compose down` if you were using bare metal and 
+    want to switch to tilt. This is because both solutions expose the same ports at the host level.
 
 If you would like to develop live on kubernetes then start [here](tilt.md) otherwise go [here](ide.md).
