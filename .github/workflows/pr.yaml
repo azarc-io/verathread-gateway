@@ -499,6 +499,8 @@ jobs:
           zip -r bin/vth-gateway-shell.zip bin/fe
       - name: "Push Git Tag"
         run: git tag ${{ steps.tag.outputs.tag }} && git push origin tag ${{ steps.tag.outputs.tag }}
+      - uses: actions-ecosystem/action-get-latest-tag@v1
+        id: get-latest-tag
       - name: "Create Release"
         uses: softprops/action-gh-release@v2
         with:
@@ -506,7 +508,7 @@ jobs:
           generate_release_notes: true
           repository: azarc-io/verathread-gateway
           token: ${{ secrets.PAT_TOKEN }}
-          target_commitish: ${{ github.event.pull_request.base.ref }}
+          target_commitish: ${{ steps.get-latest-tag.outputs.tag }}
           files: |
             bin/be/vth-gateway-linux-amd64
             bin/be/vth-gateway-linux-arm64
