@@ -45,6 +45,15 @@ When you create a PR several jobs will begin running:
 
 ## Process Overview
 
+!!! note
+
+    When a pull request reaches it's release stage 2 tags will be generated.
+
+    - v\*.\*.\*: A tag created from main after the pr has been merged, it does not contain verision number changes.
+        - eg. v1.0.0
+    - v\*.\*.\*-chart: This version contains the commit history and the updated version numbers in the chart files
+        - eg. v1.0.0-chart
+
 ```mermaid
 flowchart TD
   PR((PR Create Or Update)) -- Parallel --> BEUT[[BE Unit Tests]]
@@ -68,15 +77,20 @@ flowchart TD
   QAP --> MREL{{Manual Release}}
   MREL -- QA Passed --> REL{Release?}
   MREL -- QA Failed - Reject --> PRQAREJ[End Workflow]
-  REL -- Yes --> RLT[[Update Versions & Tag]]
-  RLT -- Parallel --> RLC[[Package & Release Chart]]
-  RLT -- Parallel --> RLD[[Package & Release Docs]]
-  RLT -- Parallel --> CLN[[Cleanup]]
-  RLC --> RELD{Release Done?}
-  RELD -- Failed --> RF[End Workflow]
-  RF -- Retry --> RF
-  RLD --> RELD
-  CLN --> RELD
-  RELD -- Yes --> MRG[[Merge]]
-  MRG --> DONE((Done))
+  REL -- Yes --> UV[[Update Version Files]]
+  UV --> RT[[Re-Tag Images]]
+  RT --> DCWRV[[Deploy Chart With Release Version]]
+  DCWRV --> PCT[[Push Chart Tag\nv*.*.*-chart]]
+  PCT --> MRG[[Merge]]
+  MRG --> COM[[Checkout Main]]
+  COM --> PMT[[Push Tag\nv*.*.*]]
+  PMT --> CLN[[Cleanup]]
+  CLN --> DONE((Done))
+  PMT --> TTP((Triggers))
+
+  subgraph par [Push Triggers Tag Pipelines In Parallel]
+  TTP -.- RLC[[Package & Release Chart]]
+  TTP -.- RLD[[Package & Release Docs]]
+  TTP -.- MCOV[[Test Main & Update Coverage]]
+  end
 ```
