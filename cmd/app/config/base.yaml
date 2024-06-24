@@ -59,5 +59,3 @@ development:
   log_level: warn
   placement_host: localhost:50006
   config_file: dapr/config/config.yaml
-  resource_paths:
-    - dapr/components
