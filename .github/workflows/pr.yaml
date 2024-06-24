@@ -457,7 +457,7 @@ jobs:
         shell: bash
         run: |
           echo 'Ensure PR Branch is not behind main. This should never happen but "actions/checkout@v4" plugin does this by default.'
-          git merge ${{github.event.pull_request.base.ref}}
+          git merge origin/${{github.event.pull_request.base.ref}}
       - name: "Update Version Files"
         shell: bash
         run: |
