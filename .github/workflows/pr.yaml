@@ -501,7 +501,6 @@ jobs:
           generate_release_notes: true
           repository: azarc-io/verathread-gateway
           token: ${{ secrets.PAT_TOKEN }}
-          target_commitish: ${{ github.sha }}
           files: |
             bin/be/vth-gateway-linux-amd64
             bin/be/vth-gateway-linux-arm64
