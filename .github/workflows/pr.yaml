@@ -482,6 +482,25 @@ jobs:
           DOCKER_IMAGE: gateway-be
           SOURCE_VERSION: ${{ steps.configure.outputs.issue }}-${{ github.run_number }}-${{ steps.vars.outputs.sha_short }}
           TARGET_VERSION: ${{ steps.tag.outputs.tag }}
+      - name: "Setup Kube Config"
+        id: kubeVars
+        run: |
+          mkdir -p ~/.kube && echo "${{ secrets.KUBECONFIG_DEV }}" | base64 -d > ~/.kube/config
+          chmod go-r ~/.kube/config
+      - name: "Install Kubectl"
+        uses: azure/setup-kubectl@v4
+      - name: "Install Helm"
+        uses: azure/setup-helm@v4.2.0
+      - name: "Deploy Chart"
+        run: |
+          helm upgrade vth-gateway deployment/charts/gateway \
+            --install --wait --atomic --create-namespace --timeout=2m \
+            --namespace=qa-gateway-1 \
+            --values=deployment/charts/gateway/values.yaml \
+            --values=deployment/charts/gateway/values-qa1.yaml
+      - name: "Push Git Tag - Including Chart and Not Squashed"
+        run: git tag ${{ steps.tag.outputs.tag }}-chart && git push origin tag ${{ steps.tag.outputs.tag }}-chart
+
       - name: "Download FE Artifact"
         uses: actions/download-artifact@v4
         with:
@@ -497,8 +516,21 @@ jobs:
           cp bin/be/linux-amd64/vth-gateway bin/be/vth-gateway-linux-amd64
           cp bin/be/linux-arm64/vth-gateway bin/be/vth-gateway-linux-arm64
           zip -r bin/vth-gateway-shell.zip bin/fe
-      - name: "Push Git Tag"
-        run: git tag ${{ steps.tag.outputs.tag }} && git push origin tag ${{ steps.tag.outputs.tag }}
+
+      - name: Merge Pull Request
+        uses: juliangruber/merge-pull-request-action@v1
+        with:
+          github-token: ${{ secrets.PAT_TOKEN }}
+          number: ${{ github.event.pull_request.number }}
+          method: squash
+          repo: azarc-io/verathread-gateway
+
+      - name: "Push Git Tag - After Squash"
+        run: |
+          git pull origin
+          git checkout origin/${{github.event.pull_request.base.ref}}
+          git tag ${{ steps.tag.outputs.tag }}
+          git push origin tag ${{ steps.tag.outputs.tag }}
       - name: "Create Release"
         uses: softprops/action-gh-release@v2
         with:
@@ -510,13 +542,7 @@ jobs:
             bin/be/vth-gateway-linux-amd64
             bin/be/vth-gateway-linux-arm64
             bin/vth-gateway-shell.zip
-      - name: Merge Pull Request
-        uses: juliangruber/merge-pull-request-action@v1
-        with:
-          github-token: ${{ secrets.PAT_TOKEN }}
-          number: ${{ github.event.pull_request.number }}
-          method: squash
-          repo: azarc-io/verathread-gateway
+
       - name: "Clean Up BE Packages"
         uses: dataaxiom/ghcr-cleanup-action@v1
         with:
