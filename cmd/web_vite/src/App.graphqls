@@ -1,0 +1,38 @@
+query FetchShellConfig($tenant: String!) {
+  shellConfiguration(tenantId: $tenant) {
+    defaultRoute
+    categories {
+      category
+      priority
+      title
+      entries {
+        id
+        title
+        subTitle
+        authRequired
+        healthy
+        hidden
+        icon
+        module {
+          exposedModule
+          moduleName
+          outlet
+          path
+          remoteEntry
+        }
+      }
+    }
+    slots {
+      authRequired
+      priority
+      description
+      slot
+      module {
+        remoteEntry
+        path
+        moduleName
+        exposedModule
+      }
+    }
+  }
+}
