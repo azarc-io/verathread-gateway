@@ -1,49 +1,34 @@
 {
-  "name": "web",
-  "version": "0.1.0",
+  "name": "example",
   "private": true,
+  "version": "1.0.0",
   "scripts": {
-    "start": "mf-cra start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
-  },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
-  },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
+    "build": "rsbuild build",
+    "dev": "rsbuild dev --open",
+    "format": "prettier --write .",
+    "lint": "eslint .",
+    "preview": "rsbuild preview"
   },
   "dependencies": {
+    "@module-federation/enhanced": "^0.2.3",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "react-router-dom": "^6.24.0",
-    "react-scripts": "5.0.1",
-    "web-vitals": "^2.1.4"
+    "react-dom": "^18.3.1"
   },
   "devDependencies": {
-    "@testing-library/jest-dom": "^5.17.0",
-    "@testing-library/react": "^13.4.0",
-    "@testing-library/user-event": "^13.5.0",
-    "@types/jest": "^27.5.2",
-    "@types/node": "^16.18.101",
+    "@eslint/compat": "^1.1.0",
+    "@eslint/js": "^9.5.0",
+    "@rsbuild/core": "^0.7.10",
+    "@rsbuild/plugin-react": "^0.7.10",
+    "@rsbuild/plugin-sass": "^0.7.10",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
-    "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
-    "mf-cra": "^0.0.5",
-    "typescript": "^4.9.5",
-    "sass": "^1.77.6"
+    "eslint": "^9.5.0",
+    "eslint-plugin-react": "^7.34.2",
+    "eslint-plugin-react-hooks": "^4.6.2",
+    "globals": "^15.4.0",
+    "prettier": "^3.3.2",
+    "sass": "^1.77.6",
+    "typescript": "^5.4.2",
+    "typescript-eslint": "^7.12.0"
   }
 }

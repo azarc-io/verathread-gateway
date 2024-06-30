@@ -1,16 +1,12 @@
-import './App.scss'
-import {useState} from "react";
+import './App.css';
 
-function App() {
-  const [curCount, setCurCount] = useState(0)
-
+const App = () => {
   return (
-      <>
-        <button onClick={() => setCurCount((count) => count + 1)}>
-          remote count is {curCount}
-        </button>
-      </>
-  )
-}
+    <div className="content">
+      <h1>Rsbuild with React</h1>
+      <p>Start building amazing things with Rsbuild.</p>
+    </div>
+  );
+};
 
-export default App
+export default App;

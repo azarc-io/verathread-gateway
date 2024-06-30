@@ -1,35 +1,22 @@
-import React, {Suspense} from 'react';
-import logo from './logo.svg';
 import './App.css';
-import useFederatedComponent from 'mf-cra';
+import useFederatedComponent from "./helpers";
 
-const remoteApps = [
-  {
-    "remoteUrl": "http://localhost:3001/remoteEntry.js",
-    "moduleToLoad": "./ExampleApp",
-    "remoteName": "example",
-    "localRoute": "example1"
-  }
-]
+const App = () => {
+    const { Component, isError } = useFederatedComponent({
+        remoteUrl: 'http://localhost:3001/remoteEntry.js',
+        moduleToLoad: './Counter',
+        remoteName: 'example',
+    });
 
-function RemoteApp({ app }) {
-  const { Component: RemoteComponent } = useFederatedComponent(app);
+    if (isError) return <div>Error loading remote component</div>;
 
   return (
-      <Suspense fallback='loading...'>
-        {RemoteComponent && <RemoteComponent />}
-      </Suspense>
-  );
-}
-
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <RemoteApp app={remoteApps[0]}/>
-      </header>
+    <div className="content">
+      <h1>Rsbuild with React</h1>
+      <p>Start building amazing things with Rsbuild.</p>
+        {Component ? <Component/> : null}
     </div>
   );
-}
+};
 
 export default App;
