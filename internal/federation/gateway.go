@@ -2,10 +2,10 @@ package federation
 
 import (
 	"context"
+	"github.com/azarc-io/verathread-gateway/internal/federation/logger"
 	"net/http"
 	"sync"
 
-	"github.com/azarc-io/verathread-gateway/internal/gateway/federation/logger"
 	"github.com/rs/zerolog"
 	"github.com/wundergraph/graphql-go-tools/execution/engine"
 	"github.com/wundergraph/graphql-go-tools/execution/graphql"

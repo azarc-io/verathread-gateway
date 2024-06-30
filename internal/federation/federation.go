@@ -2,10 +2,10 @@ package federation
 
 import (
 	"context"
+	http2 "github.com/azarc-io/verathread-gateway/internal/federation/http"
 	"net/http"
 	"time"
 
-	http2 "github.com/azarc-io/verathread-gateway/internal/gateway/federation/http"
 	httpuc "github.com/azarc-io/verathread-next-common/usecase/http"
 	wardenuc "github.com/azarc-io/verathread-next-common/usecase/warden"
 	"github.com/gobwas/ws"

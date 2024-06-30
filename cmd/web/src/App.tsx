@@ -1,34 +1,67 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import {lazy, useState} from 'react'
+import { Route, Routes } from "react-router-dom";
+import {useQuery} from "@apollo/client";
+import {FetchShellConfigDocument} from "./__generated__/graphql.ts";
+import {
+  __federation_method_getRemote,
+  __federation_method_setRemote,
+  // @ts-ignore
+} from "__federation__";
+
 import './App.scss'
+import Header from "./components/Header.tsx";
+import Loading from "./components/Loading.tsx";
+
+const DynamicRemoteApp = lazy(() => {
+  // values like { 'http://localhost:9000/assets/remoteEntry.js', 'remoteA', './RemoteARoot' }
+  const {url, name, module } = {
+    module: './RemoteARoot',
+    name: 'remoteA',
+    url: 'http://localhost:6110/module/remoteEntry.js'
+  };
+
+  __federation_method_setRemote(name, {
+    url: () => Promise.resolve(url),
+    format: "esm",
+    from: "vite",
+  });
+
+  const fm = __federation_method_getRemote(name, module)
+
+  console.log('default', fm)
+
+  return fm;
+});
 
 function App() {
-  const [count, setCount] = useState(0)
+  const { loading, error, data } = useQuery(FetchShellConfigDocument, {
+    variables: {
+      tenant: "abc"
+    }
+  })
+
+  const isDev = import.meta.env.DEV;
+  const mode = import.meta.env.MODE;
+
+  console.log('render', loading, error, data)
 
   return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+      <>
+        <Header></Header>
+        {loading ? (
+            <Loading></Loading>
+        ) : (
+            <div>
+              Loaded
+              {/*<Routes>*/}
+              {/*  <Route path="/" element={<DynamicRemoteApp />} />*/}
+              {/*</Routes>*/}
+            </div>
+        )}
+
+        <p>DEV variable: {JSON.stringify(isDev)}</p>
+        <p>MODE variable: {mode}</p>
+      </>
   )
 }
 

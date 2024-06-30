@@ -1,4 +1,4 @@
-package gateway
+package internal
 
 import (
 	"context"
@@ -81,7 +81,7 @@ func proxyHTTP(tgt *ProxyTarget, c echo.Context) http.Handler {
 		}
 		// If the client canceled the request (usually by closing the connection), we can report a
 		// client error (4xx) instead of a server error (5xx) to correctly identify the situation.
-		// The Go standard library (at of late 2020) wraps the exported, standard
+		// The Go standard library (as of late 2020) wraps the exported, standard
 		// context.Canceled error with unexported garbage value requiring a substring check, see
 		// https://github.com/golang/go/blob/6965b01ea248cabb70c3749fd218b36089a21efb/src/net/net.go#L416-L430
 		if errors.Is(err, context.Canceled) || strings.Contains(err.Error(), "operation was canceled") {
@@ -150,7 +150,7 @@ func captureTokens(pattern *regexp.Regexp, input string) *strings.Replacer {
 	return strings.NewReplacer(replace...)
 }
 
-// enable this and call it if you want to use re-write
+// enable this and call it if you want to enable re-write
 // func rewriteRulesRegex(rewrite map[string]string) map[*regexp.Regexp]string {
 //	// Initialize
 //	rulesRegex := map[*regexp.Regexp]string{}

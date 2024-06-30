@@ -1,6 +1,9 @@
-package gateway
+package internal
 
 import (
+	"github.com/azarc-io/verathread-gateway/internal/api"
+	"github.com/azarc-io/verathread-gateway/internal/cache"
+	federation2 "github.com/azarc-io/verathread-gateway/internal/federation"
 	"net/http"
 	"net/url"
 	"strings"
@@ -9,7 +12,6 @@ import (
 	error2 "github.com/azarc-io/verathread-gateway/internal/error"
 
 	"github.com/azarc-io/verathread-gateway/internal/config"
-	"github.com/azarc-io/verathread-gateway/internal/gateway/federation"
 	httpuc "github.com/azarc-io/verathread-next-common/usecase/http"
 	"github.com/azarc-io/verathread-next-common/util/healthz"
 	"github.com/labstack/echo/v4"
@@ -23,42 +25,20 @@ import (
 /************************************************************************/
 
 type (
-	Gateway struct {
-		log        zerolog.Logger // default logger
-		opts       *config.APIGatewayOptions
-		http       httpuc.HttpUseCase
-		httpClient *http.Client
-		sdlMap     map[string]string
-		services   []*federation.ServiceConfig
-		federation *federation.Federation
-		moduleMap  map[string]*ProxyTarget
-		ready      bool
-	}
-
-	AppAddedOrUpdatedEvent struct {
-		APIEndpoint   string       `json:"apiUrl"`
-		APIWsEndpoint string       `json:"apiWsUrl"`
-		Package       string       `json:"package"`
-		ProxyAPI      bool         `json:"proxyApi"`
-		Name          string       `json:"name"`
-		Version       string       `json:"version"`
-		Available     bool         `json:"available"`
-		Navigation    []*AppModule `json:"navigation"`
-	}
-
-	AppRemovedEvent struct {
-		Package    string       `json:"package"`
-		Name       string       `json:"name"`
-		Version    string       `json:"version"`
-		Navigation []*AppModule `json:"navigation"`
-	}
-
-	AppModule struct {
-		ID                      string            `json:"id"`
-		Proxy                   bool              `json:"proxy"`
-		BaseURL                 string            `json:"baseUrl"`
-		RemoteEntryRewriteRegEx map[string]string `json:"remoteEntryRewriteRegEx"`
-		Slug                    string            `json:"slug"`
+	Domain struct {
+		log          zerolog.Logger // default logger
+		opts         *config.APIGatewayOptions
+		http         httpuc.HttpUseCase
+		httpClient   *http.Client
+		sdlMap       map[string]string
+		services     []*federation2.ServiceConfig
+		federation   *federation2.Federation
+		moduleMap    map[string]*ProxyTarget
+		ready        bool
+		is           api.InternalService
+		httpInternal httpuc.HttpUseCase
+		cache        *cache.ProjectCache
+		registry     *RegistrationActor
 	}
 )
 
@@ -66,47 +46,61 @@ type (
 /* LIFECYCLE
 /************************************************************************/
 
-func (g *Gateway) Stop() error {
-	return nil
-}
+func (d *Domain) Init() error {
+	// handles caching apps to reduce db hits
+	d.cache = cache.NewProjectCache(d.log)
 
-func (g *Gateway) Init() error {
 	healthz.Register("gateway", time.Second*1, func() error {
-		if !g.ready {
+		if !d.ready {
 			return error2.ErrGatewayNotReady
 		}
 		return nil
 	})
 
+	// create service to handle inbound requests
+	d.is = NewService(d.opts, d.log, d.cache)
+
+	// register app registration actor
+	if err := d.createAppRegistryHandler(); err != nil {
+		return err
+	}
+
 	return nil
 }
 
-func (g *Gateway) Start() error {
+func (d *Domain) Stop() error {
+	return nil
+}
+
+func (d *Domain) Start() error {
 	// create http server
-	g.http = httpuc.NewHttpUseCase(
-		httpuc.WithHttpConfig(g.opts.Config.HTTP),
-		httpuc.WithLogger(g.log),
+	d.http = httpuc.NewHttpUseCase(
+		httpuc.WithHttpConfig(d.opts.Config.HTTP),
+		httpuc.WithLogger(d.log),
 	)
 
-	// create dapr server service
-	mux := g.opts.DaprUseCase.Mux()
+	// route all unhandled requests to echo
+	mux := d.opts.DaprUseCase.Mux()
 	mux.NotFound(func(writer http.ResponseWriter, request *http.Request) {
-		g.http.Server().ServeHTTP(writer, request)
+		d.http.Server().ServeHTTP(writer, request)
 	})
 
 	// health check
-	g.http.Server().GET("/health", echo.WrapHandler(healthz.Handler()))
+	d.http.Server().GET("/health", echo.WrapHandler(healthz.Handler()))
 
 	// register the shell app route
-	g.registerShellAppRoute()
+	d.registerShellAppRoute()
 
 	// graphql federation
-	g.registerGraphqlRoute()
+	if err := d.registerGraphqlRoute(); err != nil {
+		return err
+	}
 
 	// resource proxy
-	g.registerProxyRouter()
+	d.registerProxyRouter()
 
-	g.ready = true
+	// flag service is ready so health starts reporting ok status
+	d.ready = true
 
 	return nil
 }
@@ -116,25 +110,25 @@ func (g *Gateway) Start() error {
 /************************************************************************/
 
 // registerShellAppRoute serves up the shell app
-func (g *Gateway) registerShellAppRoute() {
-	e := g.http.Server()
+func (d *Domain) registerShellAppRoute() {
+	e := d.http.Server()
 
-	if g.opts.Config.WebProxy != "" {
-		g.log.Info().Msgf("serving files from: %s", g.opts.Config.WebProxy)
+	if d.opts.Config.WebProxy != "" {
+		d.log.Info().Msgf("serving files from: %s", d.opts.Config.WebProxy)
 
-		url, err := url.Parse(g.opts.Config.WebProxy)
+		_url, err := url.Parse(d.opts.Config.WebProxy)
 		if err != nil {
 			panic(err)
 		}
 
 		tgt := &ProxyTarget{
 			Name:         "shell",
-			URL:          url,
+			URL:          _url,
 			Meta:         nil,
 			RegexRewrite: nil,
 		}
 
-		grp := g.http.Server().Group("")
+		grp := d.http.Server().Group("")
 		grp.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
 			return func(c echo.Context) error {
 				req := c.Request()
@@ -170,8 +164,8 @@ func (g *Gateway) registerShellAppRoute() {
 				return nil
 			}
 		})
-	} else if g.opts.Config.WebDir != "" {
-		g.log.Info().Msgf("serving files from: %s", g.opts.Config.WebDir)
+	} else if d.opts.Config.WebDir != "" {
+		d.log.Info().Msgf("serving files from: %s", d.opts.Config.WebDir)
 
 		g1 := e.Group("")
 		g1.Use(
@@ -182,7 +176,7 @@ func (g *Gateway) registerShellAppRoute() {
 				},
 			}),
 			middleware.StaticWithConfig(middleware.StaticConfig{
-				Root:  g.opts.Config.WebDir,
+				Root:  d.opts.Config.WebDir,
 				Index: "index.html",
 				HTML5: true,
 				Skipper: func(e echo.Context) bool {
@@ -201,9 +195,10 @@ func (g *Gateway) registerShellAppRoute() {
 /* GRAPHQL ROUTING
 /************************************************************************/
 
-func (g *Gateway) registerGraphqlRoute() {
-	for name, service := range g.opts.Config.Services {
-		g.services = append(g.services, &federation.ServiceConfig{
+func (d *Domain) registerGraphqlRoute() error {
+	// transform any statically registered routes provided through configuration
+	for name, service := range d.opts.Config.Services {
+		d.services = append(d.services, &federation2.ServiceConfig{
 			Name:     name,
 			URL:      service.Gql,
 			WS:       service.GqlWs,
@@ -211,15 +206,24 @@ func (g *Gateway) registerGraphqlRoute() {
 		})
 	}
 
-	g.federation = federation.New(g.http, g.log, g.services, g.opts.WardenUseCase)
+	// register the application gateways own graphql endpoint with the federation server,
+	// so we can serve up information about apps, navigation etc.
+	if err := d.registerGqlApi(); err != nil {
+		return err
+	}
+
+	// create the federation gateway
+	d.federation = federation2.New(d.http, d.log, d.services, d.opts.WardenUseCase)
+
+	return nil
 }
 
 /************************************************************************/
 /* WEB APP PROXIES
 /************************************************************************/
 
-func (g *Gateway) registerProxyRouter() {
-	grp := g.http.Server().Group("/module/:name")
+func (d *Domain) registerProxyRouter() {
+	grp := d.http.Server().Group("/module/:name")
 	grp.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			req := c.Request()
@@ -239,7 +243,7 @@ func (g *Gateway) registerProxyRouter() {
 				req.Header.Set(echo.HeaderXForwardedFor, c.RealIP())
 			}
 
-			if tgt, ok := g.moduleMap[module]; ok {
+			if tgt, ok := d.moduleMap[module]; ok {
 				if err := rewriteURL(tgt.RegexRewrite, req); err != nil {
 					return err
 				}
@@ -264,8 +268,8 @@ func (g *Gateway) registerProxyRouter() {
 /* FACTORY
 /************************************************************************/
 
-func NewGateway(opts ...config.APIGatewayOption) *Gateway {
-	g := &Gateway{
+func NewGateway(opts ...config.APIGatewayOption) *Domain {
+	g := &Domain{
 		log:        log.With().Str("app", "gateway").Logger(),
 		opts:       &config.APIGatewayOptions{},
 		httpClient: http.DefaultClient,

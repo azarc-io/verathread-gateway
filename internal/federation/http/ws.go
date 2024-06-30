@@ -4,9 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"github.com/azarc-io/verathread-gateway/internal/federation/logger"
 	"net"
 
-	"github.com/azarc-io/verathread-gateway/internal/gateway/federation/logger"
 	"github.com/gobwas/ws"
 	"github.com/gobwas/ws/wsutil"
 	"github.com/jensneuse/abstractlogger"

@@ -1,0 +1,134 @@
+#********************************************************************************************
+# DIRECTIVES
+#********************************************************************************************
+
+enum QueryType {
+    Date
+    Deleted
+}
+
+directive @ref(
+    field: String,
+    dependencies: [String]
+) on INPUT_FIELD_DEFINITION | FIELD_DEFINITION
+
+directive @warden(
+    resource: String!
+    action: String!
+    resourceKey: String
+    filterField: String
+) on FIELD_DEFINITION
+
+directive @refRoot(
+    id: RefRoot!
+) on FIELD_DEFINITION
+
+directive @queryFields on INPUT_FIELD_DEFINITION
+directive @queryCondition on INPUT_FIELD_DEFINITION
+directive @nestedQueries on INPUT_FIELD_DEFINITION
+directive @queryOp on INPUT_FIELD_DEFINITION
+directive @queryValue on INPUT_FIELD_DEFINITION
+directive @queryField on INPUT_FIELD_DEFINITION
+directive @queryFieldExists on INPUT_FIELD_DEFINITION
+directive @queryRules on INPUT_FIELD_DEFINITION
+directive @query on INPUT_FIELD_DEFINITION
+directive @queryType(type: QueryType!) on INPUT_FIELD_DEFINITION
+directive @goField(forceResolver: String, name: String) on FIELD_DEFINITION | INPUT_FIELD_DEFINITION
+directive @validation(constraint: String!) on INPUT_FIELD_DEFINITION | ARGUMENT_DEFINITION
+
+#********************************************************************************************
+# CUSTOM SCALARS
+#********************************************************************************************
+
+scalar Time
+scalar Duration
+scalar Any
+
+#********************************************************************************************
+# TAGS
+#********************************************************************************************
+
+type TagValue {
+    Value: Any! @ref(field: "value")
+}
+
+type TagValues {
+    Key: String! @ref(field: "key")
+    Values: [TagValue] @ref(field: "values")
+}
+
+#********************************************************************************************
+# PAGINATION
+#********************************************************************************************
+
+input Page {
+    limit: Int @ref(field: "limit")
+    page: Int @ref(field: "page")
+}
+
+type PageInfo {
+    total: Int!
+    next: Int!
+    prev: Int!
+    page: Int!
+    perPage: Int!
+    totalPage: Int!
+}
+
+
+#********************************************************************************************
+# SORTING
+#********************************************************************************************
+
+input Sort {
+    key: String!
+    type: SortType!
+}
+
+enum SortType {
+    ASC,
+    DES
+}
+
+#********************************************************************************************
+# QUERY CONDITIONAL TYPES
+#********************************************************************************************
+
+enum QueryCondition {
+    And
+    Or
+}
+
+input QueryValue {
+    value: Any @queryValue
+}
+
+input QueryOperatorAndValue {
+    op: QueryOperators! @queryOp
+    value: Any @queryValue # @validation(constraint: "required,max=5")
+}
+
+input QueryOperatorAndDate {
+    op: QueryOperators! @queryOp
+    value: Time @queryValue # @validation(constraint: "required,max=5")
+}
+
+input QueryOperatorFieldAndValue {
+    field: String! @queryField
+    op: QueryOperators! @queryOp
+    value: Any @queryValue
+    exists: Boolean @queryFieldExists
+}
+
+enum QueryOperators {
+    Equal
+    NotEqual
+    Contains
+    In
+    NotIn
+    GreaterThan
+    LessThan
+    LessThanOrEqual
+    GreaterThanOrEqual
+    Regex
+}

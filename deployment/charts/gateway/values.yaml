@@ -57,7 +57,7 @@ annotations:
   dapr.io/app-port: "6010"
   dapr.io/config: "gateway-config"
   dapr.io/log-level: "warn"
-  dapr.io/sidecar-image: ghcr.io/azarc-io/dapr:1.0.1-linux-amd64
+  dapr.io/sidecar-image: ghcr.io/azarc-io/dapr:1.13.4-vth-linux-amd64
 
 # handles routing, is split into two / for web and /graphql and /modules for api and static file proxy
 ingress:

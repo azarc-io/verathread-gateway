@@ -1,7 +1,7 @@
 apiVersion: dapr.io/v1alpha1
 kind: Configuration
 metadata:
-  name: vth-cloud-gateway
+  name: vth-gateway
   namespace: vth-next
 spec:
   tracing:
@@ -16,8 +16,3 @@ spec:
   features:
     - name: HotReload
       enabled: false
-  nameResolution:
-    component: "sqlite"
-    version: "v1"
-    configuration:
-      connectionString: ".data/nr.db"

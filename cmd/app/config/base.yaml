@@ -9,6 +9,15 @@ dapr:
   http_port: 6012
   grpc_port: 6011
 
+database:
+  host: ${MONGO_HOST}
+  port: 27017
+  user: ""
+  pass: ""
+  args: "?replicaSet=rs0&tls=false&connect=direct&retryWrites=true&w=majority"
+  scheme: ""
+  name: vth-gateway
+
 gateway:
   web_dir: ${PROJECT_BASE_DIR}/cmd/web/dist
   backoffice_org: org_hiUmCjtFR7ZgEckN
