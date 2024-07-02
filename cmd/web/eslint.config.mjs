@@ -25,7 +25,8 @@ export default [
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
+      "@typescript-eslint/no-explicit-any": "off"
     },
   },
-  { ignores: ['dist/'] },
+  { ignores: ['dist/', 'src/__generated__', 'src/helpers'] },
 ];

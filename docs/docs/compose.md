@@ -36,3 +36,5 @@ Run the following command to take down the stack:
 ```shell
 docker-compose down
 ```
+
+You can now begin coding, your changes will be hot reloaded for the backend and HMR updates for the front end.

@@ -1,6 +1,6 @@
 import './App.css';
 import {useSubscription} from "@apollo/client";
-import {ShellConfigEventType, ShellNavigation, SubscribeToShellConfigDocument} from "./__generated__/graphql";
+import {ShellConfigEventType, SubscribeToShellConfigDocument} from "./__generated__/graphql";
 import {Link, Route, Routes} from "react-router-dom";
 import Home from "./components/Home";
 import RemoteAppLoader from "./components/RemoteLoader";

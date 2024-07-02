@@ -1,7 +1,7 @@
 import {defineConfig} from '@rsbuild/core';
 import {pluginReact} from '@rsbuild/plugin-react';
 import {ModuleFederationPlugin} from '@module-federation/enhanced/rspack';
-// @ts-ignore
+// @ts-expect-error complains about json import but works
 import {dependencies} from './package.json';
 import CompressionPlugin from 'compression-webpack-plugin/dist';
 

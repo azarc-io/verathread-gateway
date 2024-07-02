@@ -1,10 +1,11 @@
 import {ShellNavigation} from "../__generated__/graphql";
 import useFederatedComponent from "../helpers";
 import React, {Suspense} from "react";
+import ComponentNotFound from "./ComponentNotFound";
 
 const RemoteAppLoader = (props: any) => {
     const app: ShellNavigation = props.app;
-
+    console.log('loading', app)
     const {Component, isError} = useFederatedComponent({
         remoteUrl: 'http://localhost:3001/remoteEntry.js',
         moduleToLoad: './Counter',
@@ -16,7 +17,7 @@ const RemoteAppLoader = (props: any) => {
     return (
         <div>
             <Suspense>
-                {Component ? <Component/> : <label>Not found</label>}
+                {Component ? <Component/> : <ComponentNotFound/>}
             </Suspense>
         </div>
     )
