@@ -1,14 +1,16 @@
 package internal
 
 import (
+	"bytes"
+	"compress/gzip"
 	"context"
 	"errors"
 	"fmt"
+	apptypes "github.com/azarc-io/verathread-gateway/internal/types"
 	"io"
 	"net"
 	"net/http"
 	"net/http/httputil"
-	"net/url"
 	"regexp"
 	"strconv"
 	"strings"
@@ -23,17 +25,7 @@ import (
 // 499 too instead of the more problematic 5xx, which does not allow to detect this situation
 const StatusCodeContextCanceled = 499
 
-type (
-	// ProxyTarget defines the upstream target.
-	ProxyTarget struct {
-		Name         string
-		URL          *url.URL
-		Meta         echo.Map
-		RegexRewrite map[*regexp.Regexp]string
-	}
-)
-
-func proxyRaw(t *ProxyTarget, c echo.Context) http.Handler {
+func proxyRaw(t *apptypes.ProxyTarget, c echo.Context) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		in, _, err := c.Response().Hijack()
 		if err != nil {
@@ -72,8 +64,17 @@ func proxyRaw(t *ProxyTarget, c echo.Context) http.Handler {
 	})
 }
 
-func proxyHTTP(tgt *ProxyTarget, c echo.Context) http.Handler {
+func proxyHTTP(tgt *apptypes.ProxyTarget, c echo.Context) http.Handler {
 	proxy := httputil.NewSingleHostReverseProxy(tgt.URL)
+	proxy.ModifyResponse = func(response *http.Response) error {
+		r, err := gzip.NewReader(response.Body)
+		body, err := io.ReadAll(r)
+		if err != nil {
+			return err
+		}
+		response.Body = io.NopCloser(bytes.NewBuffer(body))
+		return nil
+	}
 	proxy.ErrorHandler = func(resp http.ResponseWriter, req *http.Request, err error) {
 		desc := tgt.URL.String()
 		if tgt.Name != "" {
@@ -151,17 +152,29 @@ func captureTokens(pattern *regexp.Regexp, input string) *strings.Replacer {
 }
 
 // enable this and call it if you want to enable re-write
-// func rewriteRulesRegex(rewrite map[string]string) map[*regexp.Regexp]string {
-//	// Initialize
-//	rulesRegex := map[*regexp.Regexp]string{}
-//	for k, v := range rewrite {
-//		k = regexp.QuoteMeta(k)
-//		k = strings.ReplaceAll(k, `\*`, "(.*?)")
-//		if strings.HasPrefix(k, `\^`) {
-//			k = strings.ReplaceAll(k, `\^`, "^")
-//		}
-//		k += "$"
-//		rulesRegex[regexp.MustCompile(k)] = v
-//	}
-//	return rulesRegex
-//}
+func rewriteRulesRegex(rewrite map[string]string) map[*regexp.Regexp]string {
+	// Initialize
+	rulesRegex := map[*regexp.Regexp]string{}
+	for k, v := range rewrite {
+		k = regexp.QuoteMeta(k)
+		k = strings.ReplaceAll(k, `\*`, "(.*?)")
+		if strings.HasPrefix(k, `\^`) {
+			k = strings.ReplaceAll(k, `\^`, "^")
+		}
+		k = k + "$"
+		rulesRegex[regexp.MustCompile(k)] = v
+	}
+	return rulesRegex
+}
+
+func uniqueSliceElements[T comparable](inputSlice []T) []T {
+	uniqueSlice := make([]T, 0, len(inputSlice))
+	seen := make(map[T]bool, len(inputSlice))
+	for _, element := range inputSlice {
+		if !seen[element] {
+			uniqueSlice = append(uniqueSlice, element)
+			seen[element] = true
+		}
+	}
+	return uniqueSlice
+}

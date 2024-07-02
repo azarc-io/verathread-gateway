@@ -184,16 +184,22 @@ func initDevMode(ctx context.Context, cfg *devuc.Config, ch chan struct{}) chan 
 	return ready
 }
 
+func setResponseACAOHeaderFromRequest(req http.Request, resp echo.Response) {
+	resp.Header().Set(echo.HeaderAccessControlAllowOrigin, "*")
+}
+
 // registerWebHandler serves up the web app
 func registerWebHandler(huc httpuc.HttpUseCase, cfg *Config) {
 	e := huc.Server()
 
-	g1 := e.Group("/module")
+	g1 := e.Group("/module/" + Domain)
 	g1.Use(
 		middleware.GzipWithConfig(middleware.GzipConfig{
 			Skipper: func(c echo.Context) bool {
 				ct := c.Response().Header().Get(echo.HeaderContentType)
-				return ct != "text/css" && ct != "application/javascript"
+				return ct != "text/css" &&
+					!strings.HasPrefix(ct, "application/javascript") &&
+					!strings.HasPrefix(ct, "text/javascript")
 			},
 		}),
 		middleware.StaticWithConfig(middleware.StaticConfig{

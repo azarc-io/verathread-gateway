@@ -1,0 +1,21 @@
+FROM golang:1.22-alpine as helper
+LABEL authors="waeljammal"
+WORKDIR /src
+RUN apk update && apk add bash curl git
+RUN go install github.com/go-task/task/v3/cmd/task@latest
+COPY taskfile.yaml /src/taskfile.yaml
+RUN task setup:container
+COPY example/.fsw.task.yml /src/example/.fsw.task.yml
+COPY dapr /src/dapr
+
+ARG GITHUB_PAT_TOKEN
+
+RUN git config --global url."https://x-access-token:${GITHUB_PAT_TOKEN}@github.com/".insteadOf "https://github.com/"
+
+COPY go.mod /src/go.mod
+COPY go.sum /src/go.sum
+RUN go mod download
+
+COPY .env /src/.env
+
+CMD task example:be

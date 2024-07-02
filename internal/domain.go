@@ -4,6 +4,7 @@ import (
 	"github.com/azarc-io/verathread-gateway/internal/api"
 	"github.com/azarc-io/verathread-gateway/internal/cache"
 	federation2 "github.com/azarc-io/verathread-gateway/internal/federation"
+	apptypes "github.com/azarc-io/verathread-gateway/internal/types"
 	"net/http"
 	"net/url"
 	"strings"
@@ -33,7 +34,6 @@ type (
 		sdlMap       map[string]string
 		services     []*federation2.ServiceConfig
 		federation   *federation2.Federation
-		moduleMap    map[string]*ProxyTarget
 		ready        bool
 		is           api.InternalService
 		httpInternal httpuc.HttpUseCase
@@ -121,7 +121,7 @@ func (d *Domain) registerShellAppRoute() {
 			panic(err)
 		}
 
-		tgt := &ProxyTarget{
+		tgt := &apptypes.ProxyTarget{
 			Name:         "shell",
 			URL:          _url,
 			Meta:         nil,
@@ -222,8 +222,28 @@ func (d *Domain) registerGraphqlRoute() error {
 /* WEB APP PROXIES
 /************************************************************************/
 
+func ACAOHeaderOverwriteMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(ctx echo.Context) error {
+		ctx.Response().Before(func() {
+			h := ctx.Response().Header()
+			h.Set("X-Content-Type-Options", h.Values("X-Content-Type-Options")[0])
+			h.Set("X-Dns-Prefetch-Control", h.Values("X-Dns-Prefetch-Control")[0])
+			h.Set("X-Download-Options", h.Values("X-Download-Options")[0])
+			h.Set("X-Frame-Options", h.Values("X-Frame-Options")[0])
+			h.Set("X-Request-Id", h.Values("X-Request-Id")[0])
+			h.Set("X-Xss-Protection", h.Values("X-Xss-Protection")[0])
+			h.Set("Vary", h.Values("Vary")[0])
+			for k, v := range ctx.Response().Header() {
+				log.Info().Msgf("header %s: %v", k, v)
+			}
+		})
+		return next(ctx)
+	}
+}
+
 func (d *Domain) registerProxyRouter() {
 	grp := d.http.Server().Group("/module/:name")
+	grp.Use(ACAOHeaderOverwriteMiddleware)
 	grp.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			req := c.Request()
@@ -243,10 +263,12 @@ func (d *Domain) registerProxyRouter() {
 				req.Header.Set(echo.HeaderXForwardedFor, c.RealIP())
 			}
 
-			if tgt, ok := d.moduleMap[module]; ok {
+			if tgt, ok := d.is.GetProxyTarget(module); ok {
 				if err := rewriteURL(tgt.RegexRewrite, req); err != nil {
 					return err
 				}
+
+				d.log.Info().Msgf("found proxy target <%s>", tgt.URL)
 
 				// Proxy
 				switch {
@@ -257,6 +279,8 @@ func (d *Domain) registerProxyRouter() {
 					log.Info().Msgf("proxy to %s%s", tgt.URL, req.URL)
 					proxyHTTP(tgt, c).ServeHTTP(res, req)
 				}
+			} else {
+				d.log.Warn().Msgf("no proxy target found for module <%s>", module)
 			}
 
 			return nil
@@ -274,7 +298,6 @@ func NewGateway(opts ...config.APIGatewayOption) *Domain {
 		opts:       &config.APIGatewayOptions{},
 		httpClient: http.DefaultClient,
 		sdlMap:     make(map[string]string),
-		moduleMap:  make(map[string]*ProxyTarget),
 	}
 
 	for _, opt := range opts {

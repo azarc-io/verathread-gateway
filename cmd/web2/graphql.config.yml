@@ -1,0 +1,8 @@
+schema: schema.json
+extensions:
+  endpoints:
+    Verathread Server API Gateway:
+      url: http://127.0.0.1:6010/graphql
+      headers:
+        user-agent: JS GraphQL
+      introspect: true

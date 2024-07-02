@@ -5,7 +5,7 @@ go 1.22.2
 require (
 	github.com/99designs/gqlgen v0.17.45
 	github.com/asynkron/protoactor-go v0.0.0-20240413045429-76c172a71a16
-	github.com/azarc-io/verathread-next-common v1.0.1-beta.22
+	github.com/azarc-io/verathread-next-common v1.0.1-beta.23
 	github.com/dapr/go-sdk v1.10.1
 	github.com/erni27/imcache v1.2.0
 	github.com/gobwas/ws v1.3.1
@@ -196,7 +196,7 @@ require (
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
 
-replace github.com/azarc-io/verathread-next-common => /Users/waeljammal/Development/golang/verathread-next-common
+//replace github.com/azarc-io/verathread-next-common => /Users/waeljammal/Development/golang/verathread-next-common
 
 replace go.opentelemetry.io/otel => go.opentelemetry.io/otel v1.26.0
 

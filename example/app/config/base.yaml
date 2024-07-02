@@ -1,6 +1,6 @@
 name: vth-gateway-example
 id: vth-gateway-example-1
-webDir: web/dist/assets
+webDir: web/dist
 
 logger:
   level: info
@@ -13,12 +13,6 @@ dapr:
 http:
   address: 127.0.0.1
   port: 6110
-  cors:
-    allow_credentials: true
-    allow_origins:
-      - '*'
-    allow_headers:
-      - '*'
 
 registration:
   webBaseUrl: http://localhost:6110

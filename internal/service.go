@@ -18,19 +18,27 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"net/url"
+	"regexp"
 	"time"
 )
 
 type (
 	service struct {
-		log   zerolog.Logger
-		opts  *config.APIGatewayOptions
-		db    *mongo.Collection
-		cache *cache.ProjectCache
+		log       zerolog.Logger
+		opts      *config.APIGatewayOptions
+		db        *mongo.Collection
+		cache     *cache.ProjectCache
+		moduleMap map[string]*apptypes.ProxyTarget
 	}
 )
 
-func (s service) RegisterApp(ctx context.Context, req *app.RegisterAppInput) (*app.RegisterAppOutput, error) {
+func (s *service) GetProxyTarget(module string) (*apptypes.ProxyTarget, bool) {
+	t, ok := s.moduleMap[module]
+	return t, ok
+}
+
+func (s *service) RegisterApp(ctx context.Context, req *app.RegisterAppInput) (*app.RegisterAppOutput, error) {
 	id := hashutil.UuidFromString(req.Package)
 	count, err := s.db.CountDocuments(ctx, bson.M{
 		"_id": id,
@@ -103,6 +111,8 @@ func (s service) RegisterApp(ctx context.Context, req *app.RegisterAppInput) (*a
 
 	ent.Id = id
 
+	s.RegisterProxyTarget(ctx, ent)
+
 	s.log.Info().Str("pkg", req.Package).Msgf("registered app")
 	s.cache.Add(ent, time.Now().Add(time.Second*4))
 
@@ -120,7 +130,7 @@ func (s service) RegisterApp(ctx context.Context, req *app.RegisterAppInput) (*a
 	return &app.RegisterAppOutput{Id: id}, nil
 }
 
-func (s service) KeepAlive(ctx context.Context, req *app.KeepAliveAppInput) (*app.KeepAliveAppOutput, error) {
+func (s *service) KeepAlive(ctx context.Context, req *app.KeepAliveAppInput) (*app.KeepAliveAppOutput, error) {
 	if _, ok := s.cache.Get(req.Pkg); ok {
 		s.cache.ResetExpiryOf(req.Pkg, time.Second*4)
 		rsp := &app.KeepAliveAppOutput{
@@ -136,7 +146,7 @@ func (s service) KeepAlive(ctx context.Context, req *app.KeepAliveAppInput) (*ap
 	}, nil
 }
 
-func (s service) GetAppConfiguration(ctx context.Context, tenant string) (*model.ShellConfiguration, error) {
+func (s *service) GetAppConfiguration(ctx context.Context, tenant string) (*model.ShellConfiguration, error) {
 	cur, err := s.opts.MongoUseCase.Collection("app").Find(ctx, bson.M{})
 
 	if err != nil {
@@ -152,11 +162,42 @@ func (s service) GetAppConfiguration(ctx context.Context, tenant string) (*model
 	return apputil.MapAppsToNavigation(apps), nil
 }
 
+func (s *service) RegisterProxyTarget(ctx context.Context, ent *apptypes.App) {
+	for _, module := range ent.Navigation {
+		u, err := url.Parse(ent.BaseUrl)
+		if err != nil {
+			s.log.Error().Msgf("invalid base url format")
+		} else {
+			target := &apptypes.ProxyTarget{
+				Name:         module.Id,
+				URL:          u,
+				Meta:         map[string]interface{}{}, // TODO fill in auth etc.
+				RegexRewrite: make(map[*regexp.Regexp]string),
+			}
+
+			if module.RemoteEntryRewriteRegEx != nil {
+				for k, v := range rewriteRulesRegex(module.RemoteEntryRewriteRegEx) {
+					target.RegexRewrite[k] = v
+				}
+			}
+
+			s.moduleMap[module.Id] = target
+
+			s.log.Info().
+				Str("id", module.Id).
+				Str("url", u.String()).
+				Bool("proxy", ent.Proxy).
+				Msgf("registered remote module")
+		}
+	}
+}
+
 func NewService(opts *config.APIGatewayOptions, log zerolog.Logger, cache *cache.ProjectCache) api.InternalService {
 	return &service{
-		log:   log,
-		opts:  opts,
-		db:    opts.MongoUseCase.Collection("app"),
-		cache: cache,
+		log:       log,
+		opts:      opts,
+		db:        opts.MongoUseCase.Collection("app"),
+		cache:     cache,
+		moduleMap: make(map[string]*apptypes.ProxyTarget),
 	}
 }

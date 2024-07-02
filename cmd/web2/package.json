@@ -1,30 +1,41 @@
 {
-  "name": "web",
-  "version": "0.1.0",
+  "name": "web2",
   "private": true,
+  "version": "1.0.0",
   "scripts": {
-    "dev": "NEXT_PRIVATE_LOCAL_WEBPACK=true next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
+    "build": "rsbuild build",
+    "dev": "rsbuild dev",
+    "format": "prettier --write .",
+    "lint": "eslint .",
+    "preview": "rsbuild preview",
+    "gen": "graphql-codegen"
   },
   "dependencies": {
-    "@module-federation/nextjs-mf": "8.3.24",
-    "@stitches/react": "^1.2.8",
-    "next": "14.2.4",
-    "react": "^18",
-    "react-dom": "^18"
+    "@apollo/client": "^3.10.8",
+    "@module-federation/enhanced": "^0.2.3",
+    "@schirrel/module-federation-enhanced-plugin-helper": "^2.0.2",
+    "@vue/apollo-composable": "^4.0.2",
+    "graphql": "^16.9.0",
+    "graphql-tag": "^2.12.6",
+    "graphql-ws": "^5.16.0",
+    "subscriptions-transport-ws": "^0.11.0",
+    "vue": "^3.4.19",
+    "vue-router": "^4.4.0"
   },
   "devDependencies": {
-    "@module-federation/enhanced": "^0.2.3",
-    "@types/node": "^20",
-    "@types/react": "^18",
-    "@types/react-dom": "^18",
-    "eslint": "^8",
-    "eslint-config-next": "14.2.4",
-    "typescript": "^5",
-    "webpack": "5.92.1",
-    "webpack-cli": "5.1.4",
-    "webpack-dev-server": "4.15.2"
+    "@eslint/js": "^9.5.0",
+    "@graphql-codegen/cli": "^5.0.2",
+    "@graphql-codegen/client-preset": "^4.3.1",
+    "@graphql-codegen/typescript-vue-apollo": "^4.1.1",
+    "@rsbuild/core": "^0.7.10",
+    "@rsbuild/plugin-sass": "^0.7.10",
+    "@rsbuild/plugin-vue": "^0.7.10",
+    "eslint": "^9.5.0",
+    "globals": "^15.4.0",
+    "prettier": "^3.3.2",
+    "sass": "^1.77.6",
+    "sass-loader": "^14.2.1",
+    "typescript": "^5.4.2",
+    "typescript-eslint": "^7.12.0"
   }
 }

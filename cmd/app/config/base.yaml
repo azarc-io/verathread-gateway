@@ -19,7 +19,7 @@ database:
   name: vth-gateway
 
 gateway:
-  web_dir: ${PROJECT_BASE_DIR}/cmd/web/dist
+  web_dir: ${PROJECT_BASE_DIR}/cmd/web2/dist
   backoffice_org: org_hiUmCjtFR7ZgEckN
   http:
     address: ${BIND_ADDRESS}
