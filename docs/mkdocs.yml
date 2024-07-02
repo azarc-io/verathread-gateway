@@ -57,6 +57,7 @@ nav:
   - gs_setup.md
   - Developing With Tilt (K8S): tilt.md
   - Developing Locally (Bare Metal): ide.md
+  - Developing With Docker: compose.md
 - Shell Application:
   - shell/shell.md
   - shell/navigation.md
