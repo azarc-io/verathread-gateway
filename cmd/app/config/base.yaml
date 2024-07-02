@@ -9,8 +9,17 @@ dapr:
   http_port: 6012
   grpc_port: 6011
 
+database:
+  host: ${MONGO_HOST}
+  port: 27017
+  user: ""
+  pass: ""
+  args: "?replicaSet=rs0&tls=false&connect=direct&retryWrites=true&w=majority"
+  scheme: ""
+  name: vth-gateway
+
 gateway:
-  web_dir: ${PROJECT_BASE_DIR}/cmd/web/dist
+  web_dir: ${PROJECT_BASE_DIR}/cmd/web2/dist
   backoffice_org: org_hiUmCjtFR7ZgEckN
   http:
     address: ${BIND_ADDRESS}
@@ -38,8 +47,6 @@ gateway:
 
 auth:
   domain: ${AUTH_DOMAIN}
-  client_id: ${AUTH_CLIENT_ID}
-  client_secret: ${AUTH_CLIENT_SECRET}
   jwt:
     auth_domain: https://auth.dev.cloud.azarc.dev
     aud: https://verathread.com/api/verify

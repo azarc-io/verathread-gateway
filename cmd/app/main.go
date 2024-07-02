@@ -7,8 +7,10 @@ import (
 	"runtime/debug"
 	"time"
 
+	"github.com/azarc-io/verathread-gateway/internal"
+	mongouc "github.com/azarc-io/verathread-next-common/usecase/mongo"
+
 	"github.com/azarc-io/verathread-gateway/internal/config"
-	"github.com/azarc-io/verathread-gateway/internal/gateway"
 	authzuc "github.com/azarc-io/verathread-next-common/usecase/authz"
 	dapruc "github.com/azarc-io/verathread-next-common/usecase/dapr"
 	devuc "github.com/azarc-io/verathread-next-common/usecase/dev"
@@ -27,11 +29,12 @@ type (
 		cancel  context.CancelFunc   // called on service shutdown, cancels global context
 		log     zerolog.Logger       // active logger
 		cfg     *config.Config       // composed config
-		gateway *gateway.Gateway     // main api entry point
+		gateway *internal.Domain     // main api entry point
 		auth    authzuc.AuthZUseCase // auth helper
 		// tracing tracinguc.TracingUseCase
 		warden wardenuc.ClusterWardenUseCase
 		dapr   dapruc.DaprUseCase
+		mongo  mongouc.MongoUseCase
 	}
 )
 
@@ -97,20 +100,25 @@ func main() {
 	)
 	util.PanicIfErr(a.auth.Start())
 
+	// mongo use case, start immediately in case some actors want to access the db early on
+	a.mongo = mongouc.NewMongoUseCase(mongouc.WithConfig(cfg.Database))
+	util.PanicIfErr(a.mongo.Start())
+
 	// warden authorization use case
 	a.warden = wardenuc.NewClusteredWardenUseCase(
 		wardenuc.WithCommonAuthUseCase(a.auth),
 	)
 
-	a.gateway = gateway.NewGateway(
+	a.gateway = internal.NewGateway(
 		config.WithConfig(a.cfg.Gateway),
 		config.WithServiceID(a.cfg.ID),
 		config.WithAuthUseCase(a.auth),
 		config.WithWardenUseCase(a.warden),
 		config.WithDaprUseCase(a.dapr),
+		config.WithMongoUseCase(a.mongo),
 	)
 
-	// initialize dev mode if enableds
+	// initialize dev mode if enabled
 	stoppedCh := make(chan struct{})
 	<-a.initDevMode(ctx, stoppedCh)
 

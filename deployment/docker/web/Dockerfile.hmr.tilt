@@ -1,8 +1,9 @@
 FROM node:20
 WORKDIR /src
-RUN npm install --global vite
-ADD cmd/web/package.json package.json
-ADD cmd/web/yarn.lock yarn.lock
+ADD cmd/web2/package.json package.json
+ADD cmd/web2/yarn.lock yarn.lock
 RUN yarn install
-ADD cmd/web /src
-ENTRYPOINT yarn dev --port 3000 --host 0.0.0.0
+
+ENTRYPOINT yarn dev
+
+ADD cmd/web2 /src

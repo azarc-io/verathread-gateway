@@ -1,35 +1,62 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.scss'
+import './App.css';
+import {useSubscription} from "@apollo/client";
+import {ShellConfigEventType, SubscribeToShellConfigDocument} from "./__generated__/graphql";
+import {Link, Route, Routes} from "react-router-dom";
+import Home from "./components/Home";
+import RemoteAppLoader from "./components/RemoteLoader";
 
-function App() {
-  const [count, setCount] = useState(0)
+const App = () => {
+    const {loading, error, data} = useSubscription(SubscribeToShellConfigDocument, {
+        variables: {
+            tenant: "abc",
+            events: [
+                ShellConfigEventType.Initial,
+                ShellConfigEventType.Rebuild,
+                ShellConfigEventType.Updated
+            ]
+        }
+    })
 
-  return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
-}
+    if (error) return <div className="content">Could not load configuration</div>
 
-export default App
+    if (loading) return <div className="content">Loading</div>
+
+    return (
+        <>
+            <nav className="navbar">
+                <ul className="navbar-nav">
+                    <li className="nav-item">
+                        <Link to="/">Home</Link>
+                    </li>
+                    {data?.shellConfiguration?.configuration.categories?.map((row) => (
+                        <li key={row?.category} className="nav-item has-dropdown">
+                            <a href="#">{row!.title}</a>
+                            {row?.entries ?
+                                <ul className="dropdown">
+                                    {row?.entries?.map((row) => (
+                                        <li key={row?.title} className="dropdown-item">
+                                            <Link to={row!.module.path}>{row!.title}</Link>
+                                        </li>
+                                    ))}
+                                </ul>
+                                : null
+                            }
+                        </li>
+                    ))}
+                </ul>
+            </nav>
+            <div className="content">
+                <Routes key="routes">
+                    <Route key="home" path="/" element={<Home/>}/>
+                    {data?.shellConfiguration?.configuration.categories?.map((row) => {
+                        return row?.entries?.map(value => (
+                            <Route key={row?.title} path={value?.module.path} element={<RemoteAppLoader app={value}/>}/>
+                        ))
+                    })}
+                </Routes>
+            </div>
+        </>
+    );
+};
+
+export default App;

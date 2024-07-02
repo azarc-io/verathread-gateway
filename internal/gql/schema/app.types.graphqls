@@ -1,0 +1,187 @@
+#********************************************************************************************
+# ENUMS
+#********************************************************************************************
+
+enum RefRoot {
+    AppRef
+}
+
+enum ShellConfigEventType {
+    Initial
+    Updated
+    Removed
+    Added
+    Rebuild
+}
+
+#********************************************************************************************
+# APP REGISTRATION
+#********************************************************************************************
+
+enum RegisterAppCategory {
+    App
+    Setting
+    Dashboard
+}
+
+input RegisterAppInput {
+    name: String!
+    package: String!
+    version: String!
+    apiUrl: String!
+    apiWsUrl: String!
+    proxyApi: Boolean!
+    navigation: [RegisterAppNavigationInput]
+}
+
+input KeepAliveAppInput {
+    pkg: String!,
+    version: String!
+}
+
+input RegisterAppNavigationInput {
+    title: String!
+    subTitle: String
+    authRequired: Boolean
+    hidden: Boolean
+    category: RegisterAppCategory!
+    children: [RegisterChildAppNavigationInput]
+    proxy: Boolean!
+    icon: String!
+    module: RegisterAppModule!
+}
+
+input RegisterAppModule {
+    path: String
+    exposedModule: String
+    moduleName: String
+    outlet: String
+}
+
+input RegisterAppSlotModule {
+    path: String
+    exposedModule: String
+    moduleName: String
+}
+
+input RegisterAppSlot {
+    description: String!
+    authRequired: Boolean
+    module: RegisterAppSlotModule!
+}
+
+input RegisterChildAppNavigationInput {
+    title: String!
+    subTitle: String
+    authRequired: Boolean
+    path: String
+    children: [RegisterChildAppNavigationInput]
+    icon: String!
+    module: RegisterAppModule!
+}
+
+type RegisterAppOutput {
+    id: String!
+}
+
+type KeepAliveAppOutput {
+    registrationRequired: Boolean!
+    ok: Boolean!
+}
+
+#********************************************************************************************
+# SHELL NAVIGATION
+#********************************************************************************************
+
+type RegisteredApp {
+    pkg: String! @ref(field: "package")
+    name: String @ref(field: "name")
+    createdAt: Time @ref(field: "created_at")
+    updatedAt: Time @ref(field: "updated_at")
+}
+
+type RegisteredAppsPage {
+    data: [RegisteredApp] @refRoot(id: AppRef)
+    page: PageInfo!
+}
+
+type ShellNavigation {
+    id: String! @ref(field: "_id")
+    title: String! @ref(field: "title")
+    subTitle: String @ref(field: "subTitle")
+    authRequired: Boolean @ref(field: "authRequired")
+    children: [ShellNavigationChild] @ref(field: "children")
+    healthy: Boolean! @ref(field: "available")
+    module: ShellNavigationModule! @ref(field: "module")
+    icon: String! @ref(field: "icon")
+    hidden: Boolean! @ref(field: "hidden")
+}
+
+type ShellNavigationChild {
+    title: String! @ref(field: "title")
+    subTitle: String @ref(field: "subTitle")
+    module: ShellNavigationModule! @ref(field: "module")
+    authRequired: Boolean @ref(field: "authRequired")
+    children: [ShellNavigationChild] @ref(field: "children")
+    healthy: Boolean! @ref(field: "available")
+    icon: String! @ref(field: "icon")
+}
+
+type ShellNavigationSlot {
+    priority: Int
+    slot: String! @ref(field: "slot")
+    description: String! @ref(field: "description")
+    authRequired: Boolean @ref(field: "authRequired")
+    module: ShellNavigationSlotModule! @ref(field: "module")
+}
+
+type ShellNavigationModule {
+    path: String! @ref(field: "path")
+    remoteEntry: String! @ref(field: "remoteEntry")
+    exposedModule: String! @ref(field: "exposedModule")
+    moduleName: String! @ref(field: "moduleName")
+    outlet: String! @ref(field: "outlet")
+}
+
+type ShellNavigationSlotModule {
+    path: String! @ref(field: "path")
+    remoteEntry: String! @ref(field: "remoteEntry")
+    exposedModule: String! @ref(field: "exposedModule")
+    moduleName: String! @ref(field: "moduleName")
+}
+
+type ShellNavigationCategory {
+    title: String!
+    priority: Int!
+    category: RegisterAppCategory!
+    entries: [ShellNavigation]
+}
+
+type ShellConfiguration {
+    defaultRoute: String
+    categories: [ShellNavigationCategory]
+    slots: [ShellNavigationSlot]
+}
+
+type ShellConfigurationSubscription {
+    configuration: ShellConfiguration!
+    eventType: ShellConfigEventType!
+}
+
+input RegisteredAppsWhereRules {
+    condition: QueryCondition! @queryCondition
+    fields: [RegisteredAppQueryFields] @queryOp
+    rules: [RegisteredAppsWhereRules] @queryRules
+}
+
+input RegisteredAppQueryFields {
+    createdAt: QueryOperatorAndDate @ref(field: "created_at") @queryType(type: Date)
+    updatedAt: QueryOperatorAndDate @ref(field: "updated_at") @queryType(type: Date)
+    name: QueryOperatorAndValue @ref(field: "name")
+}
+
+input RegisteredAppsSort {
+    createdAt: SortType @ref(field: "created_at") @queryType(type: Date)
+    updatedAt: SortType @ref(field: "updated_at") @queryType(type: Date)
+    name: SortType @ref(field: "name")
+}

@@ -1,0 +1,3 @@
+extend type Subscription {
+    shellConfiguration(tenantId: String!, events: [ShellConfigEventType!]!): ShellConfigurationSubscription!
+}

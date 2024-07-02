@@ -1,0 +1,4 @@
+extend type Query {
+    registeredApps(page: Page!, where: RegisteredAppsWhereRules, sort: RegisteredAppsSort): RegisteredAppsPage
+    shellConfiguration(tenantId: String!): ShellConfiguration!
+}

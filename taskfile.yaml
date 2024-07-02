@@ -42,7 +42,43 @@ tasks:
     desc: "starts the front end in dev mode with hmr support"
     dir: cmd/web
     cmds:
-      - yarn dev
+      - yarn build:watch
+    env:
+      NODE_ENV: development
+
+  ##############################################################################
+  # EXAMPLE
+  ##############################################################################
+
+  example:
+    desc: "runs both the backend and frontend in local dev mode"
+    deps:
+      - example:be
+      - example:fe
+    cmds:
+      - echo "finished"
+
+  example:be:
+    desc: "builds the backend with hot reloading"
+    prefix: gateway-example
+    method: none
+    dir: example
+    cmds:
+      - fswatch -config .fsw.task.yml
+    env:
+      CONFIG_DIR: app/config
+      BASE_CONTEXT: base
+      DAPR_GRPC_PORT: 6111
+      MONGO_HOST: localhost
+
+  example:fe:
+    desc: "starts the front end in dev mode with hmr support"
+    dir: example/web
+    cmds:
+      - yarn build:watch
+    env:
+      NODE_ENV: development
+
 
   ##############################################################################
   # BUILD
@@ -170,6 +206,13 @@ tasks:
       - task: setup:tilt:template
       - task: setup:env:template
       - task: dapr:install
+      - go install github.com/codeskyblue/fswatch@latest
+
+  setup:container:
+    desc: "run this if you are starting with a fresh checkout, see documentation for configuration instructions"
+    cmds:
+      - task: dapr:install
+      - go install github.com/codeskyblue/fswatch@latest
 
   setup:tilt:template:
     desc: "copies the tilt config template to the root of the project, will not overwrite if existing"
@@ -196,13 +239,12 @@ tasks:
     internal: true
     cmds:
       - mkdir -p .data/bin
-      - wget https://github.com/azarc-io/dapr/releases/download/v1.0.1/daprd_{{OS}}_{{ARCH}}.tar.gz
+      - wget https://github.com/azarc-io/dapr/releases/download/$DAPRD_VERSION/daprd_{{OS}}_{{ARCH}}.tar.gz
       - tar zxvpf daprd_{{OS}}_{{ARCH}}.tar.gz
       - rm daprd_{{OS}}_{{ARCH}}.tar.gz
       - mv daprd ./.data/bin/daprd-{{ARCH}}
-      - go install github.com/codeskyblue/fswatch@latest
-    status:
-      - test -f ./.data/bin/daprd-{{ARCH}}
+    env:
+      DAPRD_VERSION: v1.13.4-vth
 
   ##############################################################################
   # DOCS

@@ -1,0 +1,234 @@
+# This file was generated. Do not edit manually.
+
+schema {
+    query: Query
+    mutation: Mutation
+    subscription: Subscription
+}
+
+directive @tag(name: String!) on SCALAR | OBJECT | FIELD_DEFINITION | ARGUMENT_DEFINITION | INTERFACE | UNION | ENUM | ENUM_VALUE | INPUT_OBJECT | INPUT_FIELD_DEFINITION
+
+type KeepAliveAppOutput {
+    ok: Boolean!
+    registrationRequired: Boolean!
+}
+
+type Mutation {
+    keepAlive(input: KeepAliveAppInput): KeepAliveAppOutput!
+    registerApp(input: RegisterAppInput!): RegisterAppOutput!
+}
+
+type PageInfo {
+    next: Int!
+    page: Int!
+    perPage: Int!
+    prev: Int!
+    total: Int!
+    totalPage: Int!
+}
+
+type Query {
+    registeredApps(page: Page!, sort: RegisteredAppsSort, where: RegisteredAppsWhereRules): RegisteredAppsPage
+    shellConfiguration(tenantId: String!): ShellConfiguration!
+}
+
+type RegisterAppOutput {
+    id: String!
+}
+
+type RegisteredApp {
+    createdAt: Time
+    name: String
+    pkg: String!
+    updatedAt: Time
+}
+
+type RegisteredAppsPage {
+    data: [RegisteredApp]
+    page: PageInfo!
+}
+
+type ShellConfiguration {
+    defaultRoute: String
+    navigation: [ShellNavigation]
+}
+
+type ShellConfigurationSubscription {
+    configuration: ShellConfiguration!
+    eventType: ShellConfigEventType!
+}
+
+type ShellNavigation {
+    authRequired: Boolean
+    category: RegisterAppCategory!
+    children: [ShellNavigationChild]
+    exposedModule: String
+    healthy: Boolean!
+    hidden: Boolean
+    id: String!
+    moduleName: String
+    outlet: String
+    path: String
+    remoteEntry: String
+    root: Boolean
+    slug: String!
+    subTitle: String
+    title: String!
+}
+
+type ShellNavigationChild {
+    authRequired: Boolean
+    children: [ShellNavigationChild]
+    exposedModule: String
+    healthy: Boolean!
+    hidden: Boolean
+    id: String!
+    moduleName: String
+    outlet: String
+    path: String
+    remoteEntry: String
+    slug: String!
+    subTitle: String
+    title: String!
+}
+
+type Subscription {
+    shellConfiguration(events: [ShellConfigEventType!]!, tenantId: String!): ShellConfigurationSubscription!
+}
+
+type TagValue {
+    Value: Any!
+}
+
+type TagValues {
+    Key: String!
+    Values: [TagValue]
+}
+
+enum QueryCondition {
+    And
+    Or
+}
+
+enum QueryOperators {
+    Contains
+    Equal
+    GreaterThan
+    GreaterThanOrEqual
+    In
+    LessThan
+    LessThanOrEqual
+    NotEqual
+    NotIn
+    Regex
+}
+
+enum QueryType {
+    Date
+    Deleted
+}
+
+enum RefRoot {
+    AppRef
+}
+
+enum RegisterAppCategory {
+    App
+    Dashboard
+    Global
+    Setting
+    Slot
+}
+
+enum ShellConfigEventType {
+    Added
+    Initial
+    Rebuild
+    Removed
+    Updated
+}
+
+enum SortType {
+    ASC
+    DES
+}
+
+scalar Any
+
+scalar Duration
+
+scalar Time
+
+input KeepAliveAppInput {
+    pkg: String!
+    version: String!
+}
+
+input Page {
+    limit: Int
+    page: Int
+}
+
+input QueryOperatorAndDate {
+    op: QueryOperators!
+    value: Time
+}
+
+input QueryOperatorAndValue {
+    op: QueryOperators!
+    value: Any
+}
+
+input QueryOperatorFieldAndValue {
+    exists: Boolean
+    field: String!
+    op: QueryOperators!
+    value: Any
+}
+
+input QueryValue {
+    value: Any
+}
+
+input RegisterAppInput {
+    apiUrl: String!
+    apiWsUrl: String!
+    name: String!
+    navigation: [RegisterAppNavigationInput]
+    package: String!
+    proxyApi: Boolean!
+    version: String!
+}
+
+input RegisterAppNavigationInput {
+    title: String!
+    subTitle: String
+    authRequired: Boolean
+    hidden: Boolean
+    category: RegisterAppCategory!
+    children: [RegisterAppNavigationInput]
+    proxy: Boolean!
+}
+
+input RegisteredAppQueryFields {
+    createdAt: QueryOperatorAndDate
+    name: QueryOperatorAndValue
+    updatedAt: QueryOperatorAndDate
+}
+
+input RegisteredAppsSort {
+    createdAt: SortType
+    name: SortType
+    updatedAt: SortType
+}
+
+input RegisteredAppsWhereRules {
+    condition: QueryCondition!
+    fields: [RegisteredAppQueryFields]
+    rules: [RegisteredAppsWhereRules]
+}
+
+input Sort {
+    key: String!
+    type: SortType!
+}

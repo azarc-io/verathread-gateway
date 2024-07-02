@@ -6,6 +6,9 @@ repo_name: azarc-io/verathread-gateway
 repo_url: https://github.com/azarc-io/verathread-gateway
 edit_uri: edit/main/www/docs/
 
+extra_css:
+  - overrides/theme.css
+
 theme:
   name: material
   custom_dir: docs/overrides
@@ -31,6 +34,7 @@ theme:
     - search.suggest
     - search.highlight
     - search.share
+    - content.code.annotate
 
 plugins:
   - search
@@ -53,6 +57,10 @@ nav:
   - gs_setup.md
   - Developing With Tilt (K8S): tilt.md
   - Developing Locally (Bare Metal): ide.md
+  - Developing With Docker: compose.md
+- Shell Application:
+  - shell/shell.md
+  - shell/navigation.md
 - Community:
     - contributing.md
 
@@ -81,3 +89,6 @@ markdown_extensions:
         - name: mermaid
           class: mermaid
           format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg

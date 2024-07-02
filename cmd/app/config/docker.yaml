@@ -1,0 +1,60 @@
+name: vth-gateway
+id: vth-gateway-1
+
+logger:
+  level: info
+  mode: dev # or prd
+
+dapr:
+  http_port: 6012
+  grpc_port: 6011
+
+database:
+  dsn: mongodb%3A%2F%2Fmongodb_dev%3A27017%2F%3FreplicaSet%3Drs0%26tls%3Dfalse%26connect%3Ddirect%26retryWrites%3Dtrue%26w%3Dmajority
+  name: vth-gateway
+
+gateway:
+  web_dir: /src/cmd/web/dist
+  backoffice_org: org_hiUmCjtFR7ZgEckN
+  http:
+    address: 0.0.0.0
+    port: 6010
+    cors:
+      allow_credentials: true
+      allow_origins:
+        - '*'
+      allow_headers:
+        - '*'
+      allow_methods:
+        - POST
+        - GET
+        - PUT
+        - DELETE
+        - PATCH
+        - HEAD
+  metrics:
+    address: 0.0.0.0
+    port: 6015
+  services: []
+
+auth:
+  domain: ${AUTH_DOMAIN}
+  jwt:
+    auth_domain: https://auth.dev.cloud.azarc.dev
+    aud: https://verathread.com/api/verify
+    iss: https://dev-iq3b9wdl.us.auth0.com/
+    claims: https://verathread.com/claims
+
+# Enabled dapr in embedded mode, to only be used for local development
+# in K8S dapr is automatically injected into the pod as a container and this is not required
+development:
+  enabled: true
+  app_id: vth-gateway
+  app_port: 6010
+  grpc_port: 6011
+  http_port: 6012
+  metrics_port: 6013
+  internal_grpc_port: 6014
+  log_level: info
+  placement_host: placement:50006
+  config_file: dapr/config/config.yaml

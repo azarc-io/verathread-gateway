@@ -391,6 +391,7 @@ jobs:
             --namespace=qa-gateway-1 \
             --values=deployment/charts/gateway/values.yaml \
             --values=deployment/charts/gateway/values-qa1.yaml \
+            --set configuration.database.pass=${{ secrets.MONGODB_STAGING_PASSWORD }} \
             --set image.repository=ghcr.io/azarc-io/verathread-gateway/gateway-be \
             --set image.web_repository=ghcr.io/azarc-io/verathread-gateway/gateway-fe \
             --set image.tag=${{ steps.vars.outputs.docker_tag }} \

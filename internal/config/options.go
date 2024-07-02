@@ -4,6 +4,7 @@ import (
 	authzuc "github.com/azarc-io/verathread-next-common/usecase/authz"
 	dapruc "github.com/azarc-io/verathread-next-common/usecase/dapr"
 	httpuc "github.com/azarc-io/verathread-next-common/usecase/http"
+	mongouc "github.com/azarc-io/verathread-next-common/usecase/mongo"
 	wardenuc "github.com/azarc-io/verathread-next-common/usecase/warden"
 )
 
@@ -14,6 +15,7 @@ type (
 		AuthUseCase   authzuc.AuthZUseCase
 		WardenUseCase wardenuc.ClusterWardenUseCase
 		DaprUseCase   dapruc.DaprUseCase
+		MongoUseCase  mongouc.MongoUseCase
 	}
 
 	APIGatewayOption func(o *APIGatewayOptions)
@@ -59,5 +61,11 @@ func WithWardenUseCase(wuc wardenuc.ClusterWardenUseCase) APIGatewayOption {
 func WithDaprUseCase(duc dapruc.DaprUseCase) APIGatewayOption {
 	return func(o *APIGatewayOptions) {
 		o.DaprUseCase = duc
+	}
+}
+
+func WithMongoUseCase(muc mongouc.MongoUseCase) APIGatewayOption {
+	return func(o *APIGatewayOptions) {
+		o.MongoUseCase = muc
 	}
 }

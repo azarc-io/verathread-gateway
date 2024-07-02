@@ -23,3 +23,8 @@ ingress:
       service: gateway-web
       paths:
         - /
+configuration:
+  name: gateway
+  id: ${MICRO_SERVICE_ID}
+  database:
+    name: vth-gateway-qa1
