@@ -1,35 +1,19 @@
 import './App.css';
-import useFederatedComponent from "./helpers";
-import React, {Fragment, lazy, Suspense} from "react";
-import {useQuery} from "@apollo/client";
-import {FetchShellConfigDocument, ShellNavigation} from "./__generated__/graphql";
+import {useSubscription} from "@apollo/client";
+import {ShellConfigEventType, ShellNavigation, SubscribeToShellConfigDocument} from "./__generated__/graphql";
 import {Link, Route, Routes} from "react-router-dom";
 import Home from "./components/Home";
-
-const RemoteAppLoader = (props: any) => {
-    const app: ShellNavigation = props.app;
-
-    const {Component, isError} = useFederatedComponent({
-        remoteUrl: 'http://localhost:3001/remoteEntry.js',
-        moduleToLoad: './Counter',
-        remoteName: 'example',
-    });
-
-    if (isError) return <div className="content">Error loading remote component</div>;
-
-    return (
-        <div>
-            <Suspense>
-                {Component ? <Component/> : <label>Not found</label>}
-            </Suspense>
-        </div>
-    )
-}
+import RemoteAppLoader from "./components/RemoteLoader";
 
 const App = () => {
-    const {loading, error, data} = useQuery(FetchShellConfigDocument, {
+    const {loading, error, data} = useSubscription(SubscribeToShellConfigDocument, {
         variables: {
-            tenant: "abc"
+            tenant: "abc",
+            events: [
+                ShellConfigEventType.Initial,
+                ShellConfigEventType.Rebuild,
+                ShellConfigEventType.Updated
+            ]
         }
     })
 
@@ -44,7 +28,7 @@ const App = () => {
                     <li className="nav-item">
                         <Link to="/">Home</Link>
                     </li>
-                    {data?.shellConfiguration?.categories?.map((row) => (
+                    {data?.shellConfiguration?.configuration.categories?.map((row) => (
                         <li key={row?.category} className="nav-item has-dropdown">
                             <a href="#">{row!.title}</a>
                             {row?.entries ?
@@ -64,7 +48,7 @@ const App = () => {
             <div className="content">
                 <Routes key="routes">
                     <Route key="home" path="/" element={<Home/>}/>
-                    {data?.shellConfiguration?.categories?.map((row) => {
+                    {data?.shellConfiguration?.configuration.categories?.map((row) => {
                         return row?.entries?.map(value => (
                             <Route key={row?.title} path={value?.module.path} element={<RemoteAppLoader app={value}/>}/>
                         ))

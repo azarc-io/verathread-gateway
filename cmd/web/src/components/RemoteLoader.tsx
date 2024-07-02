@@ -1,32 +1,9 @@
 import {ShellNavigation} from "../__generated__/graphql";
 import useFederatedComponent from "../helpers";
-import React, {lazy, Suspense} from "react";
-import {useParams} from "react-router-dom";
+import React, {Suspense} from "react";
 
-// export default function RemoteAppLoader() {
-//     const {app} = useParams();
-//     console.log('loading', app)
-//
-//     const {Component, isError} = useFederatedComponent({
-//         remoteUrl: 'http://localhost:3001/remoteEntry.js',
-//         moduleToLoad: './Counter',
-//         remoteName: 'example',
-//     });
-//
-//     if (isError) return <div className="content">Error loading remote component</div>;
-//
-//     return (
-//         <div>
-//             <Suspense>
-//                 {Component ? <Component/> : <label>Not found</label>}
-//             </Suspense>
-//         </div>
-//     )
-// }
-
-const RemoteLoader = lazy(() => {
-    const {app} = useParams();
-    console.log('loading', app)
+const RemoteAppLoader = (props: any) => {
+    const app: ShellNavigation = props.app;
 
     const {Component, isError} = useFederatedComponent({
         remoteUrl: 'http://localhost:3001/remoteEntry.js',
@@ -34,12 +11,15 @@ const RemoteLoader = lazy(() => {
         remoteName: 'example',
     });
 
-    if (isError || !Component) {
-        return import('./ComponentNotFound')
-    }
+    if (isError) return <div className="content">Error loading remote component</div>;
 
-    // return Component
-    return import('./ComponentNotFound')
-})
+    return (
+        <div>
+            <Suspense>
+                {Component ? <Component/> : <label>Not found</label>}
+            </Suspense>
+        </div>
+    )
+}
 
-export default RemoteLoader
+export default RemoteAppLoader
