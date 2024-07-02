@@ -1,21 +1,22 @@
 package apptypes
 
 import (
-	"github.com/azarc-io/verathread-next-common/common/app"
 	"time"
+
+	"github.com/azarc-io/verathread-next-common/common/app"
 )
 
 type (
 	App struct {
-		Id          string          `json:"id" bson:"_id,omitempty"`
+		ID          string          `json:"id" bson:"_id,omitempty"`
 		Name        string          `json:"name" bson:"name,omitempty"`
 		Package     string          `json:"package" bson:"package,omitempty"`
 		Version     string          `json:"version" bson:"version,omitempty"`
-		ApiUrl      string          `json:"apiUrl" bson:"apiUrl,omitempty"`
-		ApiWsUrl    string          `json:"apiWsUrl" bson:"apiWsUrl,omitempty"`
-		BaseUrl     string          `json:"baseUrl" bson:"baseUrl,omitempty" yaml:"baseUrl"`
+		APIHttpURL  string          `json:"apiUrl" bson:"apiUrl,omitempty"`
+		APIWsURL    string          `json:"apiWsUrl" bson:"apiWsUrl,omitempty"`
+		BaseURL     string          `json:"baseUrl" bson:"baseUrl,omitempty" yaml:"baseUrl"`
 		RemoteEntry string          `json:"remoteEntry,omitempty" bson:"remoteEntry"`
-		ProxyApi    bool            `json:"proxyApi" bson:"proxyApi,omitempty"`
+		ProxyAPI    bool            `json:"proxyApi" bson:"proxyApi,omitempty"`
 		Proxy       bool            `json:"proxy" bson:"proxy,omitempty" yaml:"proxy"`
 		Navigation  []*Navigation   `json:"navigation" bson:"navigation,omitempty"`
 		Slot1       *NavigationSlot `json:"slot1,omitempty" bson:"slot1,omitempty" yaml:"slot1"`
@@ -28,7 +29,7 @@ type (
 	}
 
 	Navigation struct {
-		Id                      string                  `json:"id" bson:"id,omitempty" yaml:"id"`
+		ID                      string                  `json:"id" bson:"id,omitempty" yaml:"id"`
 		Title                   string                  `json:"title" bson:"title,omitempty" yaml:"title"`
 		SubTitle                *string                 `json:"subTitle,omitempty" bson:"subTitle,omitempty" yaml:"subTitle"`
 		AuthRequired            *bool                   `json:"authRequired,omitempty" bson:"authRequired,omitempty" yaml:"authRequired"`

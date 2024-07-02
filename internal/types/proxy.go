@@ -1,9 +1,10 @@
 package apptypes
 
 import (
-	"github.com/labstack/echo/v4"
 	"net/url"
 	"regexp"
+
+	"github.com/labstack/echo/v4"
 )
 
 type (

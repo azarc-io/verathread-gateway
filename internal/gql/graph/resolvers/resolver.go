@@ -3,6 +3,7 @@ package resolvers
 import (
 	apptypes "github.com/azarc-io/verathread-gateway/internal/api"
 	"github.com/azarc-io/verathread-gateway/internal/config"
+
 	"github.com/dapr/go-sdk/service/common"
 )
 

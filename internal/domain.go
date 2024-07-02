@@ -1,14 +1,15 @@
 package internal
 
 import (
-	"github.com/azarc-io/verathread-gateway/internal/api"
-	"github.com/azarc-io/verathread-gateway/internal/cache"
-	federation2 "github.com/azarc-io/verathread-gateway/internal/federation"
-	apptypes "github.com/azarc-io/verathread-gateway/internal/types"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
+
+	"github.com/azarc-io/verathread-gateway/internal/api"
+	"github.com/azarc-io/verathread-gateway/internal/cache"
+	federation2 "github.com/azarc-io/verathread-gateway/internal/federation"
+	apptypes "github.com/azarc-io/verathread-gateway/internal/types"
 
 	error2 "github.com/azarc-io/verathread-gateway/internal/error"
 
@@ -208,7 +209,7 @@ func (d *Domain) registerGraphqlRoute() error {
 
 	// register the application gateways own graphql endpoint with the federation server,
 	// so we can serve up information about apps, navigation etc.
-	if err := d.registerGqlApi(); err != nil {
+	if err := d.registerGqlAPI(); err != nil {
 		return err
 	}
 

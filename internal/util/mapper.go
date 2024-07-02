@@ -3,19 +3,26 @@ package apputil
 import (
 	"cmp"
 	"fmt"
+	"slices"
+	"strings"
+
 	"github.com/azarc-io/verathread-gateway/internal/gql/graph/model"
 	apptypes "github.com/azarc-io/verathread-gateway/internal/types"
 	"github.com/azarc-io/verathread-next-common/common/app"
 	"github.com/azarc-io/verathread-next-common/util"
 	"github.com/rs/zerolog/log"
-	"slices"
-	"strings"
 )
 
 type priorityWrapper struct {
 	priority int
 	app      *apptypes.App
 }
+
+const (
+	AppPriority       = 0
+	SettingsPriority  = 1
+	DashboardCategory = 2
+)
 
 func MapNavigationToNavigationInput(n *apptypes.Navigation, an *app.RegisterAppNavigationInput) {
 	n.Title = an.Title
@@ -72,19 +79,19 @@ func MapAppsToNavigation(data []*apptypes.App) *model.ShellConfiguration {
 	var (
 		appCategory = &model.ShellNavigationCategory{
 			Title:    "Apps",
-			Priority: 0,
+			Priority: AppPriority,
 			Category: app.CategoryApp,
 			Entries:  make([]*model.ShellNavigation, 0),
 		}
 		settingsCategory = &model.ShellNavigationCategory{
 			Title:    "Settings",
-			Priority: 1,
+			Priority: SettingsPriority,
 			Category: app.CategorySetting,
 			Entries:  make([]*model.ShellNavigation, 0),
 		}
 		dashboardCategory = &model.ShellNavigationCategory{
 			Title:    "Dashboards",
-			Priority: 2,
+			Priority: DashboardCategory,
 			Category: app.CategoryDashboard,
 			Entries:  make([]*model.ShellNavigation, 0),
 		}
@@ -93,7 +100,7 @@ func MapAppsToNavigation(data []*apptypes.App) *model.ShellConfiguration {
 		slots     []*model.ShellNavigationSlot
 		addSlotFn func(slot *apptypes.NavigationSlot, a *apptypes.App)
 
-		prioritizedApps []*priorityWrapper
+		prioritizedApps = make([]*priorityWrapper, len(data))
 	)
 
 	addSlotFn = func(slot *apptypes.NavigationSlot, a *apptypes.App) {
@@ -106,7 +113,7 @@ func MapAppsToNavigation(data []*apptypes.App) *model.ShellConfiguration {
 				Path:          slot.Module.Path,
 				ExposedModule: slot.Module.ExposedModule,
 				ModuleName:    slot.Module.ModuleName,
-				RemoteEntry:   fmt.Sprintf("%s/%s", a.BaseUrl, a.RemoteEntry),
+				RemoteEntry:   fmt.Sprintf("%s/%s", a.BaseURL, a.RemoteEntry),
 			},
 		})
 
@@ -169,9 +176,7 @@ func MapAppsToNavigation(data []*apptypes.App) *model.ShellConfiguration {
 		}
 	}
 
-	result.Categories = append(result.Categories, dashboardCategory)
-	result.Categories = append(result.Categories, appCategory)
-	result.Categories = append(result.Categories, settingsCategory)
+	result.Categories = append(result.Categories, dashboardCategory, appCategory, settingsCategory)
 	result.Slots = slots
 
 	return result

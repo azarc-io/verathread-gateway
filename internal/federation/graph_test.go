@@ -1,8 +1,9 @@
 package federation_test
 
 import (
-	"github.com/azarc-io/verathread-gateway/internal/federation"
 	"testing"
+
+	"github.com/azarc-io/verathread-gateway/internal/federation"
 
 	"github.com/stretchr/testify/assert"
 )

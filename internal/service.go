@@ -4,6 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/url"
+	"regexp"
+	"time"
+
 	"github.com/azarc-io/verathread-gateway/internal/api"
 	"github.com/azarc-io/verathread-gateway/internal/cache"
 	"github.com/azarc-io/verathread-gateway/internal/config"
@@ -18,9 +22,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"net/url"
-	"regexp"
-	"time"
 )
 
 type (
@@ -32,6 +33,8 @@ type (
 		moduleMap map[string]*apptypes.ProxyTarget
 	}
 )
+
+var KeepAlivePeriod = time.Second * 4
 
 func (s *service) GetProxyTarget(module string) (*apptypes.ProxyTarget, bool) {
 	t, ok := s.moduleMap[module]
@@ -53,11 +56,11 @@ func (s *service) RegisterApp(ctx context.Context, req *app.RegisterAppInput) (*
 		Name:        req.Name,
 		Package:     req.Package,
 		Version:     req.Version,
-		ApiUrl:      req.ApiUrl,
-		ApiWsUrl:    req.ApiWsUrl,
-		BaseUrl:     req.BaseUrl,
+		APIHttpURL:  req.ApiUrl,
+		APIWsURL:    req.ApiWsUrl,
+		BaseURL:     req.BaseUrl,
 		RemoteEntry: req.RemoteEntryFile,
-		ProxyApi:    req.ProxyApi,
+		ProxyAPI:    req.ProxyApi,
 		Proxy:       req.Proxy,
 		Navigation:  []*apptypes.Navigation{},
 		CreatedAt:   time.Time{},
@@ -72,7 +75,7 @@ func (s *service) RegisterApp(ctx context.Context, req *app.RegisterAppInput) (*
 
 	for _, navigation := range req.Navigation {
 		n := &apptypes.Navigation{
-			Id: hashutil.UuidFromString(req.Package),
+			ID: hashutil.UuidFromString(req.Package),
 		}
 
 		apputil.MapNavigationToNavigationInput(n, navigation)
@@ -84,7 +87,7 @@ func (s *service) RegisterApp(ctx context.Context, req *app.RegisterAppInput) (*
 				"/module/*/*": "/$2",
 			}
 			n.RemoteEntry = util2.Ptr(
-				fmt.Sprintf("%s/module/%s/remoteEntry.js", "", n.Id)) //a.opts.Config.GatewayBaseUrl
+				fmt.Sprintf("%s/module/%s/remoteEntry.js", "", n.ID)) // a.opts.Config.GatewayBaseUrl
 		} else {
 			n.RemoteEntry = util2.Ptr(fmt.Sprintf("%s/%s", req.BaseUrl, req.RemoteEntryFile))
 		}
@@ -109,30 +112,30 @@ func (s *service) RegisterApp(ctx context.Context, req *app.RegisterAppInput) (*
 		return nil, err
 	}
 
-	ent.Id = id
+	ent.ID = id
 
 	s.RegisterProxyTarget(ctx, ent)
 
 	s.log.Info().Str("pkg", req.Package).Msgf("registered app")
-	s.cache.Add(ent, time.Now().Add(time.Second*4))
+	s.cache.Add(ent, time.Now().Add(KeepAlivePeriod))
 
 	// TODO decide if we need to publish these events or not
-	//if count == 0 {
+	// if count == 0 {
 	//	if err := a.client.PublishEvent(ctx, "vth-ent-stream", "ent.v1.registered", ent); err != nil {
 	//		a.log.Error().Err(err).Msgf("failed to publish event")
 	//	}
-	//} else {
+	// } else {
 	//	if err := a.client.PublishEvent(ctx, "vth-ent-stream", "ent.v1.updated", ent); err != nil {
 	//		a.log.Error().Err(err).Msgf("failed to publish event")
 	//	}
-	//}
+	// }
 
 	return &app.RegisterAppOutput{Id: id}, nil
 }
 
 func (s *service) KeepAlive(ctx context.Context, req *app.KeepAliveAppInput) (*app.KeepAliveAppOutput, error) {
 	if _, ok := s.cache.Get(req.Pkg); ok {
-		s.cache.ResetExpiryOf(req.Pkg, time.Second*4)
+		s.cache.ResetExpiryOf(req.Pkg, KeepAlivePeriod)
 		rsp := &app.KeepAliveAppOutput{
 			RegistrationRequired: false,
 			Ok:                   true,
@@ -148,7 +151,6 @@ func (s *service) KeepAlive(ctx context.Context, req *app.KeepAliveAppInput) (*a
 
 func (s *service) GetAppConfiguration(ctx context.Context, tenant string) (*model.ShellConfiguration, error) {
 	cur, err := s.opts.MongoUseCase.Collection("app").Find(ctx, bson.M{})
-
 	if err != nil {
 		return nil, err
 	}
@@ -164,12 +166,12 @@ func (s *service) GetAppConfiguration(ctx context.Context, tenant string) (*mode
 
 func (s *service) RegisterProxyTarget(ctx context.Context, ent *apptypes.App) {
 	for _, module := range ent.Navigation {
-		u, err := url.Parse(ent.BaseUrl)
+		u, err := url.Parse(ent.BaseURL)
 		if err != nil {
 			s.log.Error().Msgf("invalid base url format")
 		} else {
 			target := &apptypes.ProxyTarget{
-				Name:         module.Id,
+				Name:         module.ID,
 				URL:          u,
 				Meta:         map[string]interface{}{}, // TODO fill in auth etc.
 				RegexRewrite: make(map[*regexp.Regexp]string),
@@ -181,10 +183,10 @@ func (s *service) RegisterProxyTarget(ctx context.Context, ent *apptypes.App) {
 				}
 			}
 
-			s.moduleMap[module.Id] = target
+			s.moduleMap[module.ID] = target
 
 			s.log.Info().
-				Str("id", module.Id).
+				Str("id", module.ID).
 				Str("url", u.String()).
 				Bool("proxy", ent.Proxy).
 				Msgf("registered remote module")

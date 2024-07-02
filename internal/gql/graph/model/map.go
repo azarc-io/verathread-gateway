@@ -9,7 +9,7 @@ func (n *ShellNavigation) MapFromEntity(navigation *apptypes.Navigation, availab
 	n.SubTitle = navigation.SubTitle
 	n.AuthRequired = navigation.AuthRequired
 	n.Healthy = *available
-	n.ID = navigation.Id
+	n.ID = navigation.ID
 	n.Module = &ShellNavigationModule{
 		Path:          navigation.Module.Path,
 		ExposedModule: navigation.Module.ExposedModule,
@@ -41,5 +41,4 @@ func (c *ShellNavigationChild) MapChildFromEntity(navigation *apptypes.Navigatio
 }
 
 func (c *ShellNavigationChild) MapFromNavigationEntity(navigation *apptypes.Navigation, e *ShellNavigationChild) {
-
 }

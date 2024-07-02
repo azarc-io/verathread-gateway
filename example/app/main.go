@@ -3,6 +3,12 @@ package main
 import (
 	"context"
 	"fmt"
+	"net"
+	"net/http"
+	"os"
+	"strconv"
+	"strings"
+
 	"github.com/azarc-io/verathread-next-common/common/app"
 	appdapruc "github.com/azarc-io/verathread-next-common/usecase/app_dapr"
 	dapruc "github.com/azarc-io/verathread-next-common/usecase/dapr"
@@ -15,9 +21,6 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/rs/zerolog/log"
-	"net/http"
-	"os"
-	"strings"
 )
 
 const (
@@ -29,13 +32,13 @@ type (
 		Dapr         *dapruc.Config         `yaml:"dapr"`
 		Development  *devuc.Config          `yaml:"development"`
 		Registration *Registration          `yaml:"registration"`
-		Http         *httpuc.ConfigBindHttp `yaml:"http"`
+		HTTP         *httpuc.ConfigBindHttp `yaml:"http"`
 		WebDir       string                 `yaml:"webDir"`
 	}
 
 	Registration struct {
-		WebBaseUrl string `yaml:"webBaseUrl"`
-		BaseWsUrl  string `yaml:"baseWsUrl"`
+		WebBaseURL string `yaml:"webBaseUrl"`
+		BaseWsURL  string `yaml:"baseWsUrl"`
 	}
 )
 
@@ -65,12 +68,12 @@ func main() {
 	dapr := dapruc.NewDaprUseCase(
 		dapruc.WithLogger(l),
 		dapruc.WithConfig(cfg.Dapr),
-		dapruc.WithServicePort(cfg.Http.Port),
+		dapruc.WithServicePort(cfg.HTTP.Port),
 	)
 
 	// create http server
 	huc := httpuc.NewHttpUseCase(
-		httpuc.WithHttpConfig(cfg.Http),
+		httpuc.WithHttpConfig(cfg.HTTP),
 		httpuc.WithLogger(l),
 	)
 
@@ -94,11 +97,11 @@ func main() {
 			Name:            "gateway-example", // the gateway will use this name to proxy e.g. /module/user/*
 			Package:         "vth:azarc:gateway:example",
 			Version:         "1.0.0", // TODO inject from ci and use here
-			ApiUrl:          fmt.Sprintf("http://%s:%d/graphql", cfg.Http.Address, cfg.Http.Port),
-			ApiWsUrl:        fmt.Sprintf("ws://%s:%d/graphql", cfg.Http.Address, cfg.Http.Port),
+			ApiUrl:          fmt.Sprintf("http://%s/graphql", net.JoinHostPort(cfg.HTTP.Address, strconv.Itoa(cfg.HTTP.Port))),
+			ApiWsUrl:        fmt.Sprintf("ws://%s/graphql", net.JoinHostPort(cfg.HTTP.Address, strconv.Itoa(cfg.HTTP.Port))),
 			ProxyApi:        true,
 			RemoteEntryFile: "remoteEntry.js", // if proxy is true then don't need url here
-			BaseUrl:         fmt.Sprintf("%s/module/%s", cfg.Registration.WebBaseUrl, Domain),
+			BaseUrl:         fmt.Sprintf("%s/module/%s", cfg.Registration.WebBaseURL, Domain),
 			Proxy:           false,
 			Slot1: &app.RegisterAppSlot{
 				Description:  "Slot 1 module has no path so it must be a drop down",
@@ -182,10 +185,6 @@ func initDevMode(ctx context.Context, cfg *devuc.Config, ch chan struct{}) chan 
 	}()
 
 	return ready
-}
-
-func setResponseACAOHeaderFromRequest(req http.Request, resp echo.Response) {
-	resp.Header().Set(echo.HeaderAccessControlAllowOrigin, "*")
 }
 
 // registerWebHandler serves up the web app

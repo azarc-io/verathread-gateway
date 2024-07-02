@@ -3,16 +3,15 @@ package resolvers
 import (
 	"context"
 	"errors"
-	"fmt"
+	"net/http"
+
 	"github.com/azarc-io/verathread-gateway/internal/config"
 	"github.com/azarc-io/verathread-next-common/common/genericdb"
 	gqlutil "github.com/azarc-io/verathread-next-common/util/gql"
 	"github.com/rs/zerolog/log"
 )
 
-var (
-	ErrInvalidServiceResponse = errors.New("service returned an invalid response")
-)
+var ErrPageInfoNotGenerated = errors.New("something went wrong, page info was not generated")
 
 func doGenericPagedQuery[T any](
 	ctx context.Context, opts *config.APIGatewayOptions, table string, query *genericdb.GenericPagedQuery,
@@ -23,15 +22,14 @@ func doGenericPagedQuery[T any](
 	)
 
 	pi, err := db.PagedQuery(ctx, table, query, &result)
-
 	if err != nil {
 		log.Error().Err(err).Msgf("error caught while executing generic query")
-		gqlutil.AddGeneralError(ctx, err, 500)
+		gqlutil.AddGeneralError(ctx, err, http.StatusInternalServerError)
 		return result, nil, false
 	}
 
 	if pi == nil {
-		gqlutil.AddGeneralError(ctx, fmt.Errorf("something went wrong, page info was not generated"), 500)
+		gqlutil.AddGeneralError(ctx, ErrPageInfoNotGenerated, http.StatusInternalServerError)
 		return result, nil, false
 	}
 

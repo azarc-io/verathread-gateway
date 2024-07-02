@@ -1,10 +1,11 @@
 package cache
 
 import (
+	"time"
+
 	apptypes "github.com/azarc-io/verathread-gateway/internal/types"
 	"github.com/erni27/imcache"
 	"github.com/rs/zerolog"
-	"time"
 )
 
 type (
@@ -12,6 +13,11 @@ type (
 		cache *imcache.Sharded[string, *apptypes.App]
 		log   zerolog.Logger
 	}
+)
+
+var (
+	CleanupFrequency = time.Second * 5
+	CacheN           = 4
 )
 
 func (c *ProjectCache) Add(app *apptypes.App, expiresAt time.Time) {
@@ -32,8 +38,8 @@ func (c *ProjectCache) Get(pkg string) (*apptypes.App, bool) {
 func NewProjectCache(logger zerolog.Logger) *ProjectCache {
 	return &ProjectCache{
 		log: logger,
-		cache: imcache.NewSharded[string, *apptypes.App](4, imcache.DefaultStringHasher64{},
-			imcache.WithCleanerOption[string, *apptypes.App](time.Second*5),
+		cache: imcache.NewSharded[string, *apptypes.App](CacheN, imcache.DefaultStringHasher64{},
+			imcache.WithCleanerOption[string, *apptypes.App](CleanupFrequency),
 			imcache.WithEvictionCallbackOption[string, *apptypes.App](func(key string, val *apptypes.App, reason imcache.EvictionReason) {
 				if reason == imcache.EvictionReasonExpired {
 					logger.Warn().
@@ -43,10 +49,10 @@ func NewProjectCache(logger zerolog.Logger) *ProjectCache {
 						Str("reason", reason.String()).
 						Msgf("app evicted from cache, service is down or not sending keep alive messages")
 
-					//auc.System().Root.Send(
+					// auc.System().Root.Send(
 					//	auc.System().NewLocalPID(appapi.AppEventManagerActorName),
 					//	&apptypes.AppUnavailable{App: val},
-					//)
+					// )
 				}
 			}),
 		),

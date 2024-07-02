@@ -4,6 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
+	"strings"
+	"time"
+
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/handler/extension"
 	"github.com/99designs/gqlgen/graphql/handler/lru"
@@ -15,13 +19,24 @@ import (
 	netutil "github.com/azarc-io/verathread-next-common/util/net"
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
-	"net/http"
-	"strings"
-	"time"
 )
 
-// registerGqlApi registers graphql api handler
-func (d *Domain) registerGqlApi() error {
+var (
+	KeepAlivePingInterval = time.Second * 10
+	PingPongInterval      = time.Second * 20
+	InitTimeout           = time.Second * 20
+	HandshakeTimeout      = time.Second * 10
+)
+
+const (
+	lruSize       = 1000
+	maxComplexity = 70
+)
+
+var lruCache = lru.New(lruSize)
+
+// registerGqlAPI registers graphql api handler
+func (d *Domain) registerGqlAPI() error {
 	// get a free port
 	port, err := netutil.GetFreeTCPPort()
 	if err != nil {
@@ -49,22 +64,22 @@ func (d *Domain) registerGqlApi() error {
 
 	sch := graph.NewExecutableSchema(c)
 	srv := handler.New(sch)
-	srv.Use(extension.FixedComplexityLimit(70))
+	srv.Use(extension.FixedComplexityLimit(maxComplexity))
 	srv.AddTransport(transport.Options{})
 	srv.AddTransport(transport.GET{})
 	srv.AddTransport(transport.POST{})
 	srv.AddTransport(transport.MultipartForm{})
-	srv.SetQueryCache(lru.New(1000))
+	srv.SetQueryCache(lruCache)
 	srv.Use(extension.Introspection{})
 	srv.Use(extension.AutomaticPersistedQuery{
-		Cache: lru.New(100),
+		Cache: lruCache,
 	})
 	srv.AddTransport(&transport.Websocket{
-		KeepAlivePingInterval: time.Second * 10,
-		PingPongInterval:      time.Second * 20,
-		InitTimeout:           time.Second * 20,
+		KeepAlivePingInterval: KeepAlivePingInterval,
+		PingPongInterval:      PingPongInterval,
+		InitTimeout:           InitTimeout,
 		Upgrader: websocket.Upgrader{
-			HandshakeTimeout: time.Second * 10,
+			HandshakeTimeout: HandshakeTimeout,
 			Error: func(w http.ResponseWriter, r *http.Request, status int, reason error) {
 				d.log.Error().Err(reason).Msgf("error during ws upgrade")
 			},
@@ -72,7 +87,7 @@ func (d *Domain) registerGqlApi() error {
 				return true
 			},
 		},
-		//InitFunc: gqlMw.WebSocketInit,
+		// InitFunc: gqlMw.WebSocketInit,
 		ErrorFunc: func(ctx context.Context, err error) {
 			if !websocket.IsCloseError(err) &&
 				!errors.Is(err, websocket.ErrCloseSent) &&

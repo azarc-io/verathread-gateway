@@ -2,12 +2,18 @@ package main
 
 import (
 	"fmt"
-	"github.com/vektah/gqlparser/v2/ast"
 	"os"
+
+	"github.com/vektah/gqlparser/v2/ast"
 
 	"github.com/99designs/gqlgen/api"
 	"github.com/99designs/gqlgen/codegen/config"
 	"github.com/99designs/gqlgen/plugin/modelgen"
+)
+
+var (
+	ConfigExitCode   = 2
+	GenerateExitCode = 3
 )
 
 // Defining mutation function
@@ -23,7 +29,7 @@ func constraintFieldHook(td *ast.Definition, fd *ast.FieldDefinition, f *modelge
 	if c := fd.Directives.ForName("refRoot"); c != nil {
 		idArg := c.Arguments.ForName("id")
 		if idArg == nil || idArg.Value == nil {
-			panic(fmt.Sprintf("refRoot id not defined for %s", fd.Name))
+			panic("refRoot id not defined for " + fd.Name)
 		}
 	}
 
@@ -81,7 +87,7 @@ func constraintFieldHook(td *ast.Definition, fd *ast.FieldDefinition, f *modelge
 	val := fd.Directives.ForName("validation")
 	if val != nil {
 		vc := val.Arguments.ForName("constraint")
-		f.Tag += fmt.Sprintf(" validate:%s", vc.Value.String())
+		f.Tag += " validate: " + vc.Value.String()
 	}
 
 	return f, nil
@@ -91,7 +97,7 @@ func main() {
 	cfg, err := config.LoadConfigFromDefaultLocations()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "failed to load config", err.Error())
-		os.Exit(2)
+		os.Exit(ConfigExitCode)
 	}
 
 	// Attaching the mutation function onto modelgen plugin
@@ -100,9 +106,8 @@ func main() {
 	}
 
 	err = api.Generate(cfg, api.ReplacePlugin(&p))
-
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err.Error())
-		os.Exit(3)
+		os.Exit(GenerateExitCode)
 	}
 }

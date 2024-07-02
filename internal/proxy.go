@@ -6,7 +6,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	apptypes "github.com/azarc-io/verathread-gateway/internal/types"
 	"io"
 	"net"
 	"net/http"
@@ -14,6 +13,8 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+
+	apptypes "github.com/azarc-io/verathread-gateway/internal/types"
 
 	"github.com/labstack/echo/v4"
 )
@@ -68,6 +69,9 @@ func proxyHTTP(tgt *apptypes.ProxyTarget, c echo.Context) http.Handler {
 	proxy := httputil.NewSingleHostReverseProxy(tgt.URL)
 	proxy.ModifyResponse = func(response *http.Response) error {
 		r, err := gzip.NewReader(response.Body)
+		if err != nil {
+			return err
+		}
 		body, err := io.ReadAll(r)
 		if err != nil {
 			return err
@@ -161,20 +165,8 @@ func rewriteRulesRegex(rewrite map[string]string) map[*regexp.Regexp]string {
 		if strings.HasPrefix(k, `\^`) {
 			k = strings.ReplaceAll(k, `\^`, "^")
 		}
-		k = k + "$"
+		k += "$"
 		rulesRegex[regexp.MustCompile(k)] = v
 	}
 	return rulesRegex
-}
-
-func uniqueSliceElements[T comparable](inputSlice []T) []T {
-	uniqueSlice := make([]T, 0, len(inputSlice))
-	seen := make(map[T]bool, len(inputSlice))
-	for _, element := range inputSlice {
-		if !seen[element] {
-			uniqueSlice = append(uniqueSlice, element)
-			seen[element] = true
-		}
-	}
-	return uniqueSlice
 }

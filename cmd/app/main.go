@@ -2,12 +2,13 @@ package main
 
 import (
 	"context"
-	"github.com/azarc-io/verathread-gateway/internal"
-	mongouc "github.com/azarc-io/verathread-next-common/usecase/mongo"
 	"os"
 	"runtime"
 	"runtime/debug"
 	"time"
+
+	"github.com/azarc-io/verathread-gateway/internal"
+	mongouc "github.com/azarc-io/verathread-next-common/usecase/mongo"
 
 	"github.com/azarc-io/verathread-gateway/internal/config"
 	authzuc "github.com/azarc-io/verathread-next-common/usecase/authz"

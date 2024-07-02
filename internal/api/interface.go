@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+
 	"github.com/azarc-io/verathread-gateway/internal/gql/graph/model"
 	apptypes "github.com/azarc-io/verathread-gateway/internal/types"
 	"github.com/azarc-io/verathread-next-common/common/app"
