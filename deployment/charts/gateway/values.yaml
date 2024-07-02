@@ -89,6 +89,14 @@ ingress:
 configuration:
   name: gateway
   id: ${MICRO_SERVICE_ID}
+  database:
+    host: mongodb+srv://vth-uat-eu-west-2-pl-0.3vp4q.mongodb.net/
+    port: 27017
+    user: vth-staging
+    pass: ""
+    args: "?retryWrites=true&w=majority&appName=vth-uat-eu-west-2"
+    scheme: ""
+    name: vth-gateway-dev
   auth:
     domain: ""
     client_id: ""
@@ -108,19 +116,8 @@ configuration:
     grpc_port: *daprGrpcPort
   gateway:
     web_dir: /web
+    backoffice_org: org_hiUmCjtFR7ZgEckN
     web_proxy: ""
-    routing:
-      proxy: true
-      base_url: http://${BIND_ADDRESS}:6030
-    metrics:
-      address: ${BIND_ADDRESS}
-      port: 6015
-    # a static list of services to register
-    # can be combined with dynamic registration over nats
-    services: {}
-#      organization:
-#        gql: http://127.0.0.1:3500/v1.0/invoke/account/method/graphql
-#        gql_ws: http://127.0.0.1:3500/v1.0/invoke/account/method/graphql
     http:
       address: ${BIND_ADDRESS}
       port: *bindHttpPort
@@ -137,6 +134,10 @@ configuration:
           - DELETE
           - PATCH
           - HEAD
+    metrics:
+      address: ${BIND_ADDRESS}
+      port: 6015
+    services: {}
 
 # environment variables attached to the pod
 extraEnvVars:
