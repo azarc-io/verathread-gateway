@@ -19,6 +19,7 @@ It enables the following capabilities for other Azarc mono repo based projects:
     * [x] Federated Mutations
     * [x] Federated Subscriptions
 - [x] Statically configured routes
-- [ ] Dynamic routes
+- [x] Dynamic routes
     - [ ] Nats based registration
-    - [ ] GraphQL based registration
+    - [x] GraphQL based registration
+    - [x] Dapr Cluster based registration
