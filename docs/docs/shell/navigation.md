@@ -15,10 +15,10 @@ navigation routes that trigger the loading and rendering of these federated appl
         - /myApp/section1
         - /myApp/section2
 - **Dashboard**: places navigation under a root `Dashboards` menu, this menu supports a depth of 1 and is a mega menu
-  - **Slot**: places navigation as Icons within the right side of the site header, max depth is 0 and only pre-defined slots can be used
+- **Slot**: places navigation as Icons within the right side of the site header, max depth is 1 and only pre-defined slots can be used
     - *Note*: There are a maximum of 8 slots (TBD)
     - *Note*: Slots 1 - 5 are reserved for verathread applications and the remaining 3 slots are contextual to the app being loaded
-    - Slots are named like `slot-1` and their number denotes the order they will appear in from left to right
+    - Slots are named like `slot-1` to `slot-8` and their number denotes the order they will appear in from left to right
 
 ### Data Structure
 
@@ -38,6 +38,7 @@ navigation routes that trigger the loading and rendering of these federated appl
           "icon": "", // (7)
           "authRequired": true, // (8)
           "healthy": true, // (9)
+          "hidden": false // 21
           "module": {
             "moduleName": "ExampleModule", // (10)
             "exposedModule": "./AppModule", // (11)
@@ -96,7 +97,7 @@ navigation routes that trigger the loading and rendering of these federated appl
 7.  :fontawesome-solid-circle-info: A base64 encoded svg icon or font-awesome icon name e.g. `fa-info`
 8.  :fontawesome-solid-circle-info: If true then the route for the nav entry should have an auth guard attached
 9.  :fontawesome-solid-circle-info: If true the nav item should be enabled, otherwise should be disabled with a tooltip explaining that the service is currently unavailable
-10.  :fontawesome-solid-circle-info: The remote entry module name to use during routing
+10.  :fontawesome-solid-circle-info: The remote entry module name to use during routing, only used when federating angular apps
 11.  :fontawesome-solid-circle-info: The exposed module name as defined in the webpack federation configuration
 12.  :fontawesome-solid-circle-info: The url to the remote entry file, used by the router to load the entry point of a federated app
 13.  :fontawesome-solid-circle-info: Outlet, only used if the target of the navigation uses named outlets, the router can load the module into that outlet 
@@ -107,6 +108,6 @@ navigation routes that trigger the loading and rendering of these federated appl
 18.  :fontawesome-solid-circle-info: The id of the module
 19.  :fontawesome-solid-circle-info: If true then the icon should be disabled with a tooltip letting the user know that they need to log in first
 20.  :fontawesome-solid-circle-info: If true then the slot should be enabled, otherwise disabled with a tooltip letting the user know that the service is unavailable
-
+21.  :fontawesome-solid-circle-info: If true then the router should be registered but the menu entry should be hidden
 
 

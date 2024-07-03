@@ -122,17 +122,17 @@ func MapAppsToNavigation(data []*apptypes.App) *model.ShellConfiguration {
 
 	// assign a priority to all native apps, so we sort and make sure that
 	// verathread apps always take the first slots
-	for _, a := range data {
+	for i, a := range data {
 		p := 100
 
 		if strings.HasPrefix(a.Package, "vth:azarc") {
 			p = 0
 		}
 
-		prioritizedApps = append(prioritizedApps, &priorityWrapper{
+		prioritizedApps[i] = &priorityWrapper{
 			priority: p,
 			app:      a,
-		})
+		}
 	}
 
 	// sort apps by priority
