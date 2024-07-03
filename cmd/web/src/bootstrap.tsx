@@ -6,13 +6,16 @@ import {BrowserRouter} from "react-router-dom";
 import { WebSocketLink } from "@apollo/client/link/ws";
 import {getMainDefinition} from "@apollo/client/utilities";
 
+console.log('env', process.env.NODE_ENV)
+console.log('uri', import.meta.env.PUBLIC_API_BASE_URL)
+
 const httpLink = createHttpLink({
     // You should use an absolute URL here
-    uri: 'http://localhost:6010/graphql',
+    uri: import.meta.env.PUBLIC_API_BASE_URL,
 })
 
 const wsLink = new WebSocketLink({
-    uri: "ws://localhost:6010/graphql",
+    uri: import.meta.env.PUBLIC_API_BASE_WS_URL,
     options: {
         reconnect: true
     }

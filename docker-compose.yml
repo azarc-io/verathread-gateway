@@ -3,29 +3,43 @@
   # GLOBAL COMMON SERVICES
   ##################################################################################
 
+  mongodb_dev:
+    image: mongo:latest
+    container_name: mongodb_dev
+    environment:
+      MONGO_APP_DATABASE: vth-gateway
+      MONGO_REPLICA_HOST: host.docker.internal
+      MONGO_REPLICA_PORT: 27018
+    entrypoint: >
+      /bin/bash -c '
+      echo "rs.initiate()" > /docker-entrypoint-initdb.d/1-init-replicaset.js &&
+      echo "db = db.getSiblingDB(process.env[$0]);" > /docker-entrypoint-initdb.d/2-init-db-collection.js &&
+      echo "db.createCollection($1, { capped: false });" >> /docker-entrypoint-initdb.d/2-init-db-collection.js &&
+      echo "db.init.insert([{ message: $2 }]);" >> /docker-entrypoint-initdb.d/2-init-db-collection.js &&
+      /usr/local/bin/docker-entrypoint.sh mongod --replSet rs0 --bind_ip_all --noauth' "'MONGO_APP_DATABASE'" "'init'" "'db initialized successfully'"
+    networks:
+      - gw-network
+    ports:
+      - "27018:27017"
+    volumes:
+      - ./.data/mongodb:/data/db
+      - ./.data/mongodb/opt:/opt/keyfile/
+
   placement:
     image: "daprio/dapr"
     command: [ "./placement", "-port", "50006" ]
+    networks:
+      - gw-network
     ports:
       - "8080:8080"
       - "50006:50006"
     environment:
       DAPR_PLACEMENT_METADATA_ENABLED: true
 
-  nats:
-    image: nats:2.10.14-alpine3.19
-    container_name: nats
-    command: -c /etc/nats/nats.conf
-    ports:
-      - "4222:4222" # client port
-      - "6222:6222" # cluster port
-      - "8222:8222" # monitoring port
-    volumes:
-      - ./script/compose/nats.conf:/etc/nats/nats.conf
-      - ./.data/nats:/data
-
-  zipkin:
-    container_name: zipkin
-    image: openzipkin/zipkin-slim
-    ports:
-      - "9411:9411"
+networks:
+  gw-network:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.16.238.0/24
