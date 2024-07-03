@@ -10,7 +10,6 @@ import (
 	apptypes "github.com/azarc-io/verathread-gateway/internal/types"
 	"github.com/azarc-io/verathread-next-common/common/app"
 	"github.com/azarc-io/verathread-next-common/util"
-	"github.com/rs/zerolog/log"
 )
 
 type priorityWrapper struct {
@@ -142,7 +141,6 @@ func MapAppsToNavigation(data []*apptypes.App) *model.ShellConfiguration {
 
 	for _, pa := range prioritizedApps {
 		a := pa.app
-		log.Info().Msgf("processing app %s", a.Package)
 		if a.Navigation != nil {
 			// sort nav items by title
 			slices.SortFunc(a.Navigation, func(a, b *apptypes.Navigation) int {
