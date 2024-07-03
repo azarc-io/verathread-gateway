@@ -1,4 +1,4 @@
-FROM scratch
+FROM node:20-alpine
 LABEL authors="waeljammal"
 
 ARG BINARY
