@@ -1,6 +1,6 @@
 # Developing With Docker
 
-You can begin working on this project using docker compose without the need to have `goland` and `node` installed on your
+You can begin working on this project using docker compose without the need to have `golang` and `node` installed on your
 machine.
 
 ### Requirements
