@@ -229,6 +229,8 @@ jobs:
         run: task test:fe
       - name: "Build"
         run: task build:fe
+        env:
+          ENV_MODE: qa1
       - name: "Build Docker"
         run: task docker:build:multi
         env:

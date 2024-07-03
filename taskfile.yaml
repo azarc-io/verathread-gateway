@@ -42,7 +42,7 @@ tasks:
     desc: "starts the front end in dev mode with hmr support"
     dir: cmd/web
     cmds:
-      - yarn build:watch
+      - yarn dev
     env:
       NODE_ENV: development
 
@@ -109,7 +109,10 @@ tasks:
     desc: "builds the frontend for production"
     dir: cmd/web
     cmds:
-      - yarn build
+      - echo "building for environment ${ENV_MODE}"
+      - yarn build --env-mode ${ENV_MODE}
+    env:
+      ENV_MODE: production
 
   ##############################################################################
   # DOCKER

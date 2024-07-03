@@ -3,6 +3,11 @@
 You can begin working on this project using docker compose without the need to have `golang` and `node` installed on your
 machine.
 
+!!! info
+
+    Please note that the first time you start the environment it could take a few minutes for the entire stack
+    to become stable and healthy.
+
 ### Requirements
 
 - [Docker](https://www.docker.com/get-started/)
