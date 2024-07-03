@@ -164,8 +164,11 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: "Fix git URL"
         run: git config --global url."https://x-access-token:${{ secrets.PAT_TOKEN }}@github.com/".insteadOf "https://github.com/"
-      - name: "Install CLang"
-        run: sudo apt-get install clang-12
+      - name: "Install Build Deps"
+        uses: awalsh128/cache-apt-pkgs-action@latest
+        with:
+          packages: build-essential g++ clang-12
+          version: 1.0
       - name: "Calculate Variables"
         id: vars
         run: echo "sha_short=`echo ${{ github.event.pull_request.head.sha }} | cut -c1-8`" >> $GITHUB_OUTPUT
