@@ -38,7 +38,7 @@ navigation routes that trigger the loading and rendering of these federated appl
           "icon": "", // (7)
           "authRequired": true, // (8)
           "healthy": true, // (9)
-          "hidden": false // 21
+          "hidden": false // (21)
           "module": {
             "moduleName": "ExampleModule", // (10)
             "exposedModule": "./AppModule", // (11)
