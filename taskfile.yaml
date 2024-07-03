@@ -100,7 +100,7 @@ tasks:
   build:be:
     desc: "builds the backend"
     cmds:
-      - CGO_ENABLED=1 CC=clang-12 CXX=clang++-12 GOOS={{.GOOS}} GOARCH={{.GOARCH}} go build -tags wg_composition_v8 -ldflags='-extldflags=-static -w -s' -o bin/{{.GOOS}}-{{.GOARCH}}/vth-gateway cmd/app/main.go
+      - CGO_ENABLED=1 GOOS={{.GOOS}} GOARCH={{.GOARCH}} go build -tags wg_composition_v8 -ldflags='-extldflags=-static -w -s' -o bin/{{.GOOS}}-{{.GOARCH}}/vth-gateway cmd/app/main.go
     vars:
       GOOS: '{{default "linux" .GOOS}}'
       GOARCH: '{{default "amd64" .GOARCH}}'
