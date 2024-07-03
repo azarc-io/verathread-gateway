@@ -110,7 +110,7 @@ tasks:
     dir: cmd/web
     cmds:
       - echo "building for environment ${ENV_MODE}"
-      - yarn build -- --env-mode ${ENV_MODE}
+      - yarn build --env-mode ${ENV_MODE}
     env:
       ENV_MODE: production
 
