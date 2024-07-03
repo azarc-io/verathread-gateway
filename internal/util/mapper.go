@@ -100,7 +100,7 @@ func MapAppsToNavigation(data []*apptypes.App) *model.ShellConfiguration {
 		slots     []*model.ShellNavigationSlot
 		addSlotFn func(slot *apptypes.NavigationSlot, a *apptypes.App)
 
-		prioritizedApps = make([]*priorityWrapper, len(data))
+		prioritizedApps []*priorityWrapper
 	)
 
 	addSlotFn = func(slot *apptypes.NavigationSlot, a *apptypes.App) {
