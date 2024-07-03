@@ -21,7 +21,7 @@ func (r *subscriptionResolver) ShellConfiguration(ctx context.Context, tenantID 
 	// load initial apps config
 	if slices.Index(events, model.ShellConfigEventTypeInitial) > -1 {
 		if cfg, err := r.InternalService.GetAppConfiguration(ctx, tenantID); err != nil {
-			return nil, nil
+			return nil, err
 		} else {
 			ch <- &model.ShellConfigurationSubscription{
 				Configuration: cfg,
