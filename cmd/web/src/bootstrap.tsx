@@ -6,16 +6,27 @@ import {BrowserRouter} from "react-router-dom";
 import { WebSocketLink } from "@apollo/client/link/ws";
 import {getMainDefinition} from "@apollo/client/utilities";
 
+let apiBaseUri = import.meta.env.PUBLIC_API_BASE_URL;
+let wsBaseUri = import.meta.env.PUBLIC_API_BASE_WS_URL;
+
+if (process.env.NODE_ENV == "production") {
+    let domain = window.location.hostname.split('.')[0];
+    let bHost = window.location.host;
+    apiBaseUri = `https://${bHost}/query`;
+    wsBaseUri = `wss://${bHost}/query`;
+}
+
 console.log('env', process.env.NODE_ENV)
-console.log('uri', import.meta.env.PUBLIC_API_BASE_URL)
+console.log('api url', apiBaseUri)
+console.log('socket url', wsBaseUri)
 
 const httpLink = createHttpLink({
     // You should use an absolute URL here
-    uri: import.meta.env.PUBLIC_API_BASE_URL,
+    uri: apiBaseUri,
 })
 
 const wsLink = new WebSocketLink({
-    uri: import.meta.env.PUBLIC_API_BASE_WS_URL,
+    uri: wsBaseUri,
     options: {
         reconnect: true
     }

@@ -90,15 +90,10 @@ configuration:
   name: gateway
   id: ${MICRO_SERVICE_ID}
   database:
-    host: vth-uat-eu-west-2-pl-0.3vp4q.mongodb.net/
-    port: 27017
-    user: vth-staging
-    pass: ""
-    args: "?retryWrites=true&w=majority&appName=vth-uat-eu-west-2"
-    scheme: "mongodb+srv://"
-    name: vth-gateway-dev
+    dsn: mongodb%3A%2F%2Fmongodb%3A27017%2F%3FreplicaSet%3Drs0%26tls%3Dfalse%26connect%3Ddirect%26retryWrites%3Dtrue%26w%3Dmajority
+    name: vth-gateway
   auth:
-    domain: ""
+    domain: "https://dev-iq3b9wdl.us.auth0.com"
     client_id: ""
     client_secret: ""
     jwt:
