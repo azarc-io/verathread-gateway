@@ -10,8 +10,8 @@ let apiBaseUri = import.meta.env.PUBLIC_API_BASE_URL;
 let wsBaseUri = import.meta.env.PUBLIC_API_BASE_WS_URL;
 
 if (process.env.NODE_ENV == "production") {
-    let domain = window.location.hostname.split('.')[0];
-    let bHost = window.location.host;
+    // const domain = window.location.hostname.split('.')[0];
+    const bHost = window.location.host;
     apiBaseUri = `https://${bHost}/query`;
     wsBaseUri = `wss://${bHost}/query`;
 }
