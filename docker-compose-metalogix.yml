@@ -1,0 +1,151 @@
+﻿name: gw-dev
+
+services:
+  ##################################################################################
+  # GLOBAL COMMON SERVICES
+  ##################################################################################
+
+  shell-fe:
+    build:
+      context: .
+      dockerfile: "deployment/docker/web/Dockerfile.dev"
+    networks:
+      - frontend-network
+    ports:
+      - "3000:3000"
+    environment:
+      DAPR_PLACEMENT_METADATA_ENABLED: true
+      NODE_ENV: development
+    develop:
+      watch:
+        - action: sync
+          path: cmd/web
+          target: /src
+
+  example-fe:
+    build:
+      context: .
+      dockerfile: "example/docker/web/Dockerfile.dev"
+    networks:
+      - frontend-network
+    ports:
+      - "3001:3001"
+    environment:
+      DAPR_PLACEMENT_METADATA_ENABLED: true
+      NODE_ENV: development
+    develop:
+      watch:
+        - action: sync
+          path: example/web
+          target: /src
+
+  gateway-dapr:
+    image: "daprio/daprd:edge"
+    command: [
+      "./daprd",
+      "--app-id", "vth-gateway",
+      "--app-port", "6010",
+      "--placement-host-address", "placement:50006", # Dapr's placement service can be reach via the docker DNS entry
+      "--resources-path", "./dapr",
+      "--dapr-grpc-port", "6011",
+      "--dapr-http-port", "6012",
+      "--config", "dapr/config/config.yaml"
+    ]
+    volumes:
+      - "./dapr/:/dapr" # Mount our components folder for the runtime to use. The mounted location must match the --resources-path argument.
+    depends_on:
+      - gateway
+      - placement
+    network_mode: "service:gateway" # Attach the gateway-dapr service to the gateway network namespace
+
+  gateway:
+    image: ghcr.io/azarc-io/verathread-gateway/gateway-be:v1.51.0
+    networks:
+      - frontend-network
+    environment:
+      CONFIG_DIR: /config
+      BASE_CONTEXT: metalogix
+      DAPRD_BIN_PATH: /src/.data/bin
+      AUTH_DOMAIN: ${AUTH_DOMAIN}
+      DAPR_GRPC_PORT: 6011
+    volumes:
+      - ./cmd/app/config:/config
+    ports:
+      - "6010:6010"
+    depends_on:
+      - mongodb_dev
+
+  example-dapr:
+    image: "daprio/daprd:edge"
+    command: [
+      "./daprd",
+      "--app-id", "vth-gateway-example",
+      "--app-port", "6110",
+      "--placement-host-address", "placement:50006", # Dapr's placement service can be reach via the docker DNS entry
+      "--resources-path", "./dapr",
+      "--dapr-grpc-port", "6111",
+      "--dapr-http-port", "6112",
+      "--config", "dapr/config/config.yaml"
+    ]
+    volumes:
+      - "./dapr/:/dapr" # Mount our components folder for the runtime to use. The mounted location must match the --resources-path argument.
+    depends_on:
+      - example
+      - placement
+    network_mode: "service:example" # Attach the gateway-dapr service to the gateway network namespace
+
+  example:
+    image: ghcr.io/azarc-io/verathread-gateway/gateway-be-example:v1.51.0
+    networks:
+      - frontend-network
+    environment:
+      CONFIG_DIR: /config
+      BASE_CONTEXT: metalogix
+      DAPR_GRPC_PORT: 6111
+    volumes:
+      - ./example/app/config:/config
+    ports:
+      - "6110:6110"
+    depends_on:
+      - gateway
+
+  mongodb_dev:
+    image: mongo:latest
+    container_name: mongodb_dev
+    environment:
+      MONGO_APP_DATABASE: vth-gateway
+      MONGO_REPLICA_HOST: host.docker.internal
+      MONGO_REPLICA_PORT: 27018
+    entrypoint: >
+      /bin/bash -c '
+      echo "rs.initiate()" > /docker-entrypoint-initdb.d/1-init-replicaset.js &&
+      echo "db = db.getSiblingDB(process.env[$0]);" > /docker-entrypoint-initdb.d/2-init-db-collection.js &&
+      echo "db.createCollection($1, { capped: false });" >> /docker-entrypoint-initdb.d/2-init-db-collection.js &&
+      echo "db.init.insert([{ message: $2 }]);" >> /docker-entrypoint-initdb.d/2-init-db-collection.js &&
+      /usr/local/bin/docker-entrypoint.sh mongod --replSet rs0 --bind_ip_all --noauth' "'MONGO_APP_DATABASE'" "'init'" "'db initialized successfully'"
+    networks:
+      - frontend-network
+    ports:
+      - "27018:27017"
+    volumes:
+      - ./.data/mongodb:/data/db
+      - ./.data/mongodb/opt:/opt/keyfile/
+
+  placement:
+    image: "daprio/dapr"
+    command: [ "./placement", "-port", "50006" ]
+    networks:
+      - frontend-network
+    ports:
+      - "8080:8080"
+      - "50006:50006"
+    environment:
+      DAPR_PLACEMENT_METADATA_ENABLED: true
+
+networks:
+  frontend-network:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.16.238.0/24
