@@ -27,6 +27,7 @@ configuration:
   name: gateway
   id: ${MICRO_SERVICE_ID}
   database:
+    dsn: ""
     host: vth-uat-eu-west-2-pl-0.3vp4q.mongodb.net/
     port: 27017
     user: vth-staging
