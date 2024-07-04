@@ -12,8 +12,8 @@ let wsBaseUri = import.meta.env.PUBLIC_API_BASE_WS_URL;
 if (process.env.NODE_ENV == "production") {
     // const domain = window.location.hostname.split('.')[0];
     const bHost = window.location.host;
-    apiBaseUri = `https://${bHost}/query`;
-    wsBaseUri = `wss://${bHost}/query`;
+    apiBaseUri = `https://${bHost}/graphql`;
+    wsBaseUri = `wss://${bHost}/graphql`;
 }
 
 console.log('env', process.env.NODE_ENV)
