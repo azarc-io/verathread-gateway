@@ -79,6 +79,26 @@ tasks:
     env:
       NODE_ENV: development
 
+  example:build:
+    desc: "builds the example backend"
+    method: none
+    dir: example
+    cmds:
+      - GOOS={{.GOOS}} GOARCH={{.GOARCH}} go build -gcflags="all=-N -l" -o bin/vth-gateway-example app/main.go && chmod 775 bin/vth-gateway-example
+    vars:
+      GOOS: '{{default "linux" .GOOS}}'
+      GOARCH: '{{default "amd64" .GOARCH}}'
+
+  example:publish:
+    desc: "publishes the example backend"
+    method: none
+    dir: example
+    cmds:
+      - docker build -f docker/app/Dockerfile -t ghcr.io/azarc-io/verathread-gateway/gateway-be-example:${EX_VERSION} .
+      - docker push ghcr.io/azarc-io/verathread-gateway/gateway-be-example:${EX_VERSION}
+    env:
+      EX_VERSION: v1.51.0
+
 
   ##############################################################################
   # BUILD

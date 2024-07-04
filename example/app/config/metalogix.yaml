@@ -1,0 +1,24 @@
+name: vth-gateway-example
+id: vth-gateway-example-1
+webDir: web/dist
+
+logger:
+  level: info
+  mode: dev # or prd
+
+dapr:
+  http_port: 6112
+  grpc_port: 6111
+
+http:
+  address: 0.0.0.0
+  port: 6110
+
+registration:
+  webBaseUrl: http://example:6110
+  baseWsUrl: ws://example:6110
+
+# Enabled dapr in embedded mode, to only be used for local development
+# in K8S dapr is automatically injected into the pod as a container and this is not required
+development:
+  enabled: false
