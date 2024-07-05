@@ -4,8 +4,9 @@
 
 echo "on-create start"
 
-# prevent dubious ownership error
+# configure git
 git config --global --add safe.directory /workspaces/verathread-gateway
+git config pull.rebase true
 
 ### clone the vth dev toolkit project
 git clone https://github.com/azarc-io/verathread-dev-toolkit.git /workspaces/verathread-dev-toolkit
