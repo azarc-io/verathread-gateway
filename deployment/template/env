@@ -1,4 +1,4 @@
-NAMESPACE=<eg. wael-dev must match toolkit namespace if used>
+NAMESPACE=vth-gateway-dev
 
 BIND_ADDRESS=127.0.0.1
 NATS_ADDRESS=nats://127.0.0.1:4222

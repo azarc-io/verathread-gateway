@@ -26,10 +26,15 @@ task setup
 echo 127.0.0.1 dev.cluster.local | sudo tee -a /etc/hosts
 echo 127.0.0.1 k3d-local-registry | sudo tee -a /etc/hosts
 
+## install helm
+curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+
 ## spin up k3d from the toolkit
 pushd /workspaces/verathread-dev-toolkit
 task setup
 task k3d:create
+kubectl wait node --all --for condition=ready --timeout=600s
+task k3d:install:charts
 popd
 
 echo "on-create complete"

@@ -3,6 +3,13 @@
 
 FROM mcr.microsoft.com/devcontainers/base
 
+RUN apt-get update
+RUN apt-get install -y apt-transport-https ca-certificates curl gnupg
+RUN echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.30/deb/ /' | tee /etc/apt/sources.list.d/kubernetes.list
+RUN chmod 644 /etc/apt/sources.list.d/kubernetes.list
+RUN apt-get update
+RUN apt-get install -y kubectl
+
 #FROM golang:1.22.4-bullseye
 
 #RUN go install github.com/fatih/gomodifytags@latest && \
