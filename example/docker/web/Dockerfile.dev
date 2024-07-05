@@ -1,9 +1,10 @@
 FROM node:20
 WORKDIR /src
+ENV VER=1
 ADD example/web/package.json package.json
 ADD example/web/yarn.lock yarn.lock
 RUN yarn install
 
 ENTRYPOINT yarn dev
 
-ADD example/web /src
+#ADD example/web /src
