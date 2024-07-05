@@ -10,6 +10,8 @@ git clone https://github.com/azarc-io/verathread-dev-toolkit.git /workspaces/ver
 # add go bin path to rc
 echo 'PATH=$PATH:/go/bin' >> ~/.zshrc
 echo 'PATH=$PATH:/go/bin' >> ~/.bashrc
+echo 'GOPRIVATE=github.com/azarc-io' >> ~/.zshrc
+echo 'GOPRIVATE=github.com/azarc-io' >> ~/.bashrc
 export PATH=$PATH:/go/bin
 
 # install task.dev

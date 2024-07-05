@@ -14,6 +14,11 @@
 					"permissions": {
 						"contents": "read"
 					}
+				},
+				"azarc-io/verathread-next-common": {
+					"permissions": {
+						"contents": "read"
+					}
 				}
 			}
 		}
