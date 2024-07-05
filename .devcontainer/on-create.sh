@@ -4,29 +4,28 @@
 
 echo "on-create start"
 
-# clone repos
-git clone https://github.com/azarc-io/verathread-gateway.git /workspaces/verathread-gateway
-
-## install golang
-#wget -c https://go.dev/dl/go1.22.0.linux-amd64.tar.gz
-#sudo tar -C /usr/local/ -xzf go1.22.0.linux-amd64.tar.gz
-## shellcheck disable=SC2016
-## dont want variables to expand
-#echo '
-## set PATH so it includes /usr/local/go/bin if it exists
-#if [ -d "/usr/local/go/bin" ] ; then
-#    PATH="/usr/local/go/bin:$PATH"
-#fi
-#' >> ~/.bashrc
+## clone the vth dev toolkit project
+git clone https://github.com/azarc-io/verathread-dev-toolkit.git /workspaces/verathread-dev-toolkit
 
 # add go bin path to rc
 echo 'PATH=$PATH:/go/bin' >> ~/.zshrc
 echo 'PATH=$PATH:/go/bin' >> ~/.bashrc
+
+# reload bash
+source ~/.bashrc
 
 # install task.dev
 go install github.com/go-task/task/v3/cmd/task@latest
 
 # run setup task
 task setup
+
+# spin up k3d from the toolkit
+pushd /workspaces/verathread-dev-toolkit
+echp '127.0.0.1 dev.cluster.local' >> /etc/hosts
+echp '127.0.0.1 k3d-local-registry' >> /etc/hosts
+task setup
+task k3d:create
+popd
 
 echo "on-create complete"
