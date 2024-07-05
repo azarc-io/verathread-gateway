@@ -10,9 +10,7 @@ git clone https://github.com/azarc-io/verathread-dev-toolkit.git /workspaces/ver
 # add go bin path to rc
 echo 'PATH=$PATH:/go/bin' >> ~/.zshrc
 echo 'PATH=$PATH:/go/bin' >> ~/.bashrc
-
-# reload bash
-source ~/.bashrc
+export PATH=$PATH:/go/bin
 
 # install task.dev
 go install github.com/go-task/task/v3/cmd/task@latest
@@ -22,8 +20,8 @@ task setup
 
 # spin up k3d from the toolkit
 pushd /workspaces/verathread-dev-toolkit
-echp '127.0.0.1 dev.cluster.local' >> /etc/hosts
-echp '127.0.0.1 k3d-local-registry' >> /etc/hosts
+echo '127.0.0.1 dev.cluster.local' >> /etc/hosts
+echo '127.0.0.1 k3d-local-registry' >> /etc/hosts
 task setup
 task k3d:create
 popd
