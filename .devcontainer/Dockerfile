@@ -1,7 +1,7 @@
 # this image is built and updated weekly
 # https://github.com/cse-labs/codespaces-images
 
-FROM mcr.microsoft.com/devcontainers/base:ubuntu-21.04
+FROM mcr.microsoft.com/devcontainers/base
 
 #FROM golang:1.22.4-bullseye
 
