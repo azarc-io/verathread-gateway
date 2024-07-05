@@ -7,6 +7,18 @@
 	"mounts": [ "source=/var/run/docker.sock,target=/var/run/docker-host.sock,type=bind" ],
 	"overrideCommand": false,
 
+	"customizations": {
+		"codespaces": {
+			"repositories": {
+				"azarc-io/verathread-dev-toolkit": {
+					"permissions": {
+						"contents": "read"
+					}
+				}
+			}
+		}
+	},
+
 	// some base images require a specific user name
 	"remoteUser": "vscode",
 
