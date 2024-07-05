@@ -35,6 +35,7 @@
 	// Install extensions
 	"extensions": [
 		"golang.go",
+		"GitHub.codespaces",
 		"ms-azuretools.vscode-docker",
 		"github.vscode-github-actions",
 		"dsznajder.es7-react-js-snippets",
