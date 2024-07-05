@@ -5,6 +5,6 @@
 echo "post-create start"
 
 # update the repos
-#git -C /workspaces/verathread-gateway pull
+git -C /workspaces/verathread-gateway pull
 
 echo "post-create complete"
