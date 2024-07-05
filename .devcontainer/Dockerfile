@@ -1,15 +1,15 @@
 # this image is built and updated weekly
 # https://github.com/cse-labs/codespaces-images
 
-FROM golang:1.22.4
+FROM ubuntu:18.04
 
-# some images require specific values
-ARG USERNAME=vscode
+COPY . .
 
-# log the docker build start event
-RUN echo "$(date +'%Y-%m-%d %H:%M:%S')    docker build start" >> /home/$USERNAME/status
+ENV PATH "$PATH:/usr/local/go/bin:/home/user/go/bin:/home/user/.cargo/bin"
+RUN bash setup.sh
 
-RUN chown -R $USERNAME:$USERNAME /home/$USERNAME
+RUN echo 'export NVM_DIR="$HOME/.nvm"' >> "$HOME/.zshrc"
+RUN echo '\n' >> "$HOME/.zshrc"
+RUN echo '[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"  # This loads nvm' >> "$HOME/.zshrc"
 
-# log the docker build complete
-RUN echo "$(date +'%Y-%m-%d %H:%M:%S')    docker build complete" >> /home/$USERNAME/status
+USER user
