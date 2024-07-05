@@ -1,7 +1,7 @@
 # this image is built and updated weekly
 # https://github.com/cse-labs/codespaces-images
 
-FROM ubuntu:18.04
+FROM golang:1.22.2
 
 COPY . .
 
