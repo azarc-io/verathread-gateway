@@ -1,43 +1,44 @@
-﻿name: gw-dev
-
-services:
+﻿services:
   ##################################################################################
   # GLOBAL COMMON SERVICES
   ##################################################################################
 
-  shell-fe:
-    build:
-      context: .
-      dockerfile: "deployment/docker/web/Dockerfile.dev"
-    networks:
-      - frontend-network
-    ports:
-      - "3000:3000"
-    environment:
-      DAPR_PLACEMENT_METADATA_ENABLED: true
-      NODE_ENV: development
-    develop:
-      watch:
-        - action: sync
-          path: cmd/web
-          target: /src
+#  shell-fe:
+#    build:
+#      context: .
+#      dockerfile: "deployment/docker/web/Dockerfile.dev"
+#    ports:
+#      - "3000:3000"
+#    environment:
+#      NODE_ENV: development
+#
+#  example-fe:
+#    build:
+#      context: .
+#      dockerfile: "example/docker/web/Dockerfile.dev"
+#    ports:
+#      - "3001:3001"
+#    environment:
+#      NODE_ENV: development
+#    volumes:
+#      - ./example/web/package.json:/src/package.json
+#      - ./example/web/yarn.lock:/src/yarn.lock
+#      - ./example/web:/src
 
-  example-fe:
-    build:
-      context: .
-      dockerfile: "example/docker/web/Dockerfile.dev"
-    networks:
-      - frontend-network
-    ports:
-      - "3001:3001"
+  gateway:
+    image: ghcr.io/azarc-io/verathread-gateway/gateway-be:v1.51.0
     environment:
-      DAPR_PLACEMENT_METADATA_ENABLED: true
-      NODE_ENV: development
-    develop:
-      watch:
-        - action: sync
-          path: example/web
-          target: /src
+      CONFIG_DIR: /config
+      BASE_CONTEXT: metalogix
+      DAPRD_BIN_PATH: /src/.data/bin
+      AUTH_DOMAIN: ${AUTH_DOMAIN}
+      DAPR_GRPC_PORT: 6011
+    volumes:
+      - ./cmd/app/config:/config
+    ports:
+      - "6010:6010"
+    depends_on:
+      - mongodb_dev
 
   gateway-dapr:
     image: "daprio/daprd:edge"
@@ -58,22 +59,18 @@ services:
       - placement
     network_mode: "service:gateway" # Attach the gateway-dapr service to the gateway network namespace
 
-  gateway:
-    image: ghcr.io/azarc-io/verathread-gateway/gateway-be:v1.51.0
-    networks:
-      - frontend-network
+  example:
+    image: ghcr.io/azarc-io/verathread-gateway/gateway-be-example:v1.51.1-linux-amd64
     environment:
       CONFIG_DIR: /config
       BASE_CONTEXT: metalogix
-      DAPRD_BIN_PATH: /src/.data/bin
-      AUTH_DOMAIN: ${AUTH_DOMAIN}
-      DAPR_GRPC_PORT: 6011
+      DAPR_GRPC_PORT: 6111
     volumes:
-      - ./cmd/app/config:/config
+      - ./example/app/config:/config
     ports:
-      - "6010:6010"
+      - "6110:6110"
     depends_on:
-      - mongodb_dev
+      - gateway
 
   example-dapr:
     image: "daprio/daprd:edge"
@@ -94,37 +91,16 @@ services:
       - placement
     network_mode: "service:example" # Attach the gateway-dapr service to the gateway network namespace
 
-  example:
-    image: ghcr.io/azarc-io/verathread-gateway/gateway-be-example:v1.51.0
-    networks:
-      - frontend-network
-    environment:
-      CONFIG_DIR: /config
-      BASE_CONTEXT: metalogix
-      DAPR_GRPC_PORT: 6111
-    volumes:
-      - ./example/app/config:/config
-    ports:
-      - "6110:6110"
-    depends_on:
-      - gateway
-
   mongodb_dev:
     image: mongo:latest
     container_name: mongodb_dev
     environment:
-      MONGO_APP_DATABASE: vth-gateway
       MONGO_REPLICA_HOST: host.docker.internal
       MONGO_REPLICA_PORT: 27018
     entrypoint: >
       /bin/bash -c '
       echo "rs.initiate()" > /docker-entrypoint-initdb.d/1-init-replicaset.js &&
-      echo "db = db.getSiblingDB(process.env[$0]);" > /docker-entrypoint-initdb.d/2-init-db-collection.js &&
-      echo "db.createCollection($1, { capped: false });" >> /docker-entrypoint-initdb.d/2-init-db-collection.js &&
-      echo "db.init.insert([{ message: $2 }]);" >> /docker-entrypoint-initdb.d/2-init-db-collection.js &&
-      /usr/local/bin/docker-entrypoint.sh mongod --replSet rs0 --bind_ip_all --noauth' "'MONGO_APP_DATABASE'" "'init'" "'db initialized successfully'"
-    networks:
-      - frontend-network
+      /usr/local/bin/docker-entrypoint.sh mongod --replSet rs0 --bind_ip_all --noauth'
     ports:
       - "27018:27017"
     volumes:
@@ -134,18 +110,8 @@ services:
   placement:
     image: "daprio/dapr"
     command: [ "./placement", "-port", "50006" ]
-    networks:
-      - frontend-network
     ports:
       - "8080:8080"
       - "50006:50006"
     environment:
-      DAPR_PLACEMENT_METADATA_ENABLED: true
-
-networks:
-  frontend-network:
-    driver: bridge
-    ipam:
-      driver: default
-      config:
-        - subnet: 172.16.238.0/24
+      DAPR_PLACEMENT_METADATA_ENABLED: "true"
