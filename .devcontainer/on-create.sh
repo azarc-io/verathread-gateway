@@ -5,7 +5,7 @@
 echo "on-create start"
 
 ## clone the vth dev toolkit project
-git clone https://github.com/azarc-io/verathread-dev-toolkit.git /workspaces/verathread-dev-toolkit
+git clone git@github.com:azarc-io/verathread-dev-toolkit.git /workspaces/verathread-dev-toolkit
 
 # add go bin path to rc
 echo 'PATH=$PATH:/go/bin' >> ~/.zshrc
