@@ -1,15 +1,18 @@
 {
 	"name": "Verathread Gateway",
+	// "image": "mcr.microsoft.com/devcontainers/go:1.22-bookworm",
 	"dockerFile": "Dockerfile",
 	// do not change these if you want Docker in Docker support
-//	"runArgs": ["--init", "--privileged"],
-//	"mounts": [ "source=/var/run/docker.sock,target=/var/run/docker-host.sock,type=bind" ],
-	"overrideCommand": false,
+	// "runArgs": ["--init", "--privileged"],
+	// "mounts": [ "source=/var/run/docker.sock,target=/var/run/docker-host.sock,type=bind" ],
+	// "overrideCommand": false,
+	"workspaceMount": "source=${localWorkspaceFolder}/,target=/workspace,type=bind,consistency=cached",
 
 	"features": {
 		"ghcr.io/devcontainers/features/node:1": {
 			"version": "latest"
-		}
+		},
+		"ghcr.io/devcontainers/features/docker-in-docker:2": {}
 	},
 
 	"customizations": {
@@ -30,7 +33,7 @@
 	},
 
 	// some base images require a specific user name
-	"remoteUser": "vscode",
+	// "remoteUser": "vscode",
 
 	// Set container specific settings
 	"settings": {
@@ -54,7 +57,7 @@
 
 	},
 
-	// Install extensions
+	// install extensions
 	"extensions": [
 		"golang.go",
 		"GitHub.codespaces",
@@ -68,14 +71,14 @@
 		"timonwong.shellcheck",
 	],
 
-	"waitFor": "postCreateCommand",
+	// "waitFor": "postCreateCommand",
 
 	// Use 'onCreateCommand' to run commands as part of container creation.
-	"onCreateCommand": "/bin/bash -c .devcontainer/on-create.sh",
+	// "onCreateCommand": "/bin/bash -c .devcontainer/on-create.sh",
 
 	// Use 'postCreateCommand' to run commands after the container is created.
-	"postCreateCommand": "/bin/bash -c .devcontainer/post-create.sh",
+	// "postCreateCommand": "/bin/bash -c .devcontainer/post-create.sh",
 
 	// Use 'postStartCommand' to run commands after the container starts.
-	"postStartCommand": "/bin/bash -c .devcontainer/post-start.sh"
+	// "postStartCommand": "/bin/bash -c .devcontainer/post-start.sh"
 }
