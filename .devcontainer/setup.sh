@@ -25,25 +25,25 @@ echo "Go version ${INSTALLED_GO_VERSION} is installed"
 
 # install gopls, dlv, hey
 echo "Getting development tools"
-go get -u golang.org/x/tools/gopls
-go get -u github.com/go-delve/delve/cmd/dlv
-go get -u github.com/rakyll/hey
+go install golang.org/x/tools/gopls
+go install github.com/go-delve/delve/cmd/dlv
+go install github.com/rakyll/hey
 
 # vscode-go dependencies
 echo "Getting dependencies for the vscode-go plugin "
 # via: https://github.com/microsoft/vscode-go/blob/master/.travis.yml
-go get -u -v github.com/acroca/go-symbols
-go get -u -v github.com/cweill/gotests/...
-go get -u -v github.com/davidrjenni/reftools/cmd/fillstruct
-go get -u -v github.com/haya14busa/goplay/cmd/goplay
-go get -u -v github.com/mdempsky/gocode
-go get -u -v github.com/ramya-rao-a/go-outline
-go get -u -v github.com/rogpeppe/godef
-go get -u -v github.com/sqs/goreturns
-go get -u -v github.com/uudashr/gopkgs/cmd/gopkgs
-go get -u -v github.com/zmb3/gogetdoc
-go get -u -v golang.org/x/lint/golint
-go get -u -v golang.org/x/tools/cmd/gorename
+go install github.com/acroca/go-symbols
+go install github.com/cweill/gotests/...
+go install github.com/davidrjenni/reftools/cmd/fillstruct
+go install github.com/haya14busa/goplay/cmd/goplay
+go install github.com/mdempsky/gocode
+go install github.com/ramya-rao-a/go-outline
+go install github.com/rogpeppe/godef
+go install github.com/sqs/goreturns
+go install github.com/uudashr/gopkgs/cmd/gopkgs
+go install github.com/zmb3/gogetdoc
+go install golang.org/x/lint/golint
+go install golang.org/x/tools/cmd/gorename
 
 # set-up and install yarn
 curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add -
