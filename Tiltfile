@@ -98,6 +98,8 @@ if hmr:
         sync('./cmd/web', '/src'),
       ]
     )
+    # Forward hmr port
+    k8s_resource(workload='gateway-chart', port_forwards=3000)
 # non hmr mode will simply sync your local dist folder, you can use vite build --watch
 # in this mode the gateway will serve the files and the side car becomes an ephemeral initContainer
 else:
@@ -132,6 +134,9 @@ helm_resource(
   image_deps=['vth-gateway', 'vth-gateway-web'],
   image_keys=[('image.repository', 'image.tag'), ('image.web_repository', 'image.web_repository_tag')],
 )
+
+# forward gateway public port
+k8s_resource(workload='gateway-chart', port_forwards=6010)
 
 # Forward mongo port
 #local_resource(

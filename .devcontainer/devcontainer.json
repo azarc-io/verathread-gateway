@@ -53,7 +53,10 @@
 
 	// forward ports for the app
 	"forwardPorts": [
-
+		80,
+		6010,
+		6443,
+		3000
 	],
 
 	// add labels

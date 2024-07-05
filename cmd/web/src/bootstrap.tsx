@@ -1,10 +1,10 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
-import {ApolloClient, ApolloProvider, createHttpLink, InMemoryCache, split} from "@apollo/client";
-import {BrowserRouter} from "react-router-dom";
+import { ApolloClient, ApolloProvider, createHttpLink, InMemoryCache, split } from "@apollo/client";
+import { BrowserRouter } from "react-router-dom";
 import { WebSocketLink } from "@apollo/client/link/ws";
-import {getMainDefinition} from "@apollo/client/utilities";
+import { getMainDefinition } from "@apollo/client/utilities";
 
 let apiBaseUri = import.meta.env.PUBLIC_API_BASE_URL;
 let wsBaseUri = import.meta.env.PUBLIC_API_BASE_WS_URL;
@@ -57,7 +57,7 @@ if (rootEl) {
     root.render(
         <BrowserRouter>
             <ApolloProvider client={client}>
-            <App />
+                <App />
             </ApolloProvider>
         </BrowserRouter>
     );
