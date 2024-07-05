@@ -1,11 +1,16 @@
 {
 	"name": "Verathread Gateway",
 	"dockerFile": "Dockerfile",
-
 	// do not change these if you want Docker in Docker support
 	"runArgs": ["--init", "--privileged"],
 	"mounts": [ "source=/var/run/docker.sock,target=/var/run/docker-host.sock,type=bind" ],
 	"overrideCommand": false,
+
+	"features": {
+		"ghcr.io/devcontainers/features/node:1": {
+			"version": "latest"
+		}
+	},
 
 	"customizations": {
 		"codespaces": {
