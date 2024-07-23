@@ -1,10 +1,10 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
-import { ApolloClient, ApolloProvider, createHttpLink, InMemoryCache, split } from "@apollo/client";
-import { BrowserRouter } from "react-router-dom";
-import { WebSocketLink } from "@apollo/client/link/ws";
-import { getMainDefinition } from "@apollo/client/utilities";
+import {ApolloClient, ApolloProvider, createHttpLink, InMemoryCache, split} from "@apollo/client";
+import {BrowserRouter} from "react-router-dom";
+import {WebSocketLink} from "@apollo/client/link/ws";
+import {getMainDefinition} from "@apollo/client/utilities";
 
 const bHost = window.location.host;
 let apiBaseUri = `http://${bHost}/graphql`;
@@ -12,12 +12,12 @@ let wsBaseUri = `ws://${bHost}/graphql`;
 
 if (import.meta.env.PRODUCTION) {
     // const domain = window.location.hostname.split('.')[0];
-    const bHost = window.location.host;
     apiBaseUri = `https://${bHost}/graphql`;
     wsBaseUri = `wss://${bHost}/graphql`;
 }
 
 console.log('env', process.env.NODE_ENV)
+console.log('production', import.meta.env.PRODUCTION)
 console.log('api url', apiBaseUri)
 console.log('socket url', wsBaseUri)
 
