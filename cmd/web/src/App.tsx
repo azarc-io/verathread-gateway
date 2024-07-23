@@ -1,10 +1,14 @@
 import './App.css';
-import { useSubscription } from "@apollo/client";
-import { ShellConfigEventType, ShellConfigurationSubscription, SubscribeToShellConfigDocument } from "./__generated__/graphql";
-import { Link, Route, Routes } from "react-router-dom";
+import {useSubscription} from "@apollo/client";
+import {
+    ShellConfigEventType,
+    ShellConfigurationSubscription,
+    SubscribeToShellConfigDocument
+} from "./__generated__/graphql";
+import {Link, Route, Routes} from "react-router-dom";
 import Home from "./components/Home";
 import RemoteAppLoader from "./components/RemoteLoader";
-import { useEffect, useState } from 'react';
+import {useState} from 'react';
 
 const App = () => {
     const [config, setConfig] = useState<ShellConfigurationSubscription | undefined>(undefined);

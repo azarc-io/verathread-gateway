@@ -1,9 +1,5 @@
 import {ShellNavigation} from "../__generated__/graphql";
-import useFederatedComponent from "../helpers";
 import React, {ComponentType, lazy, LazyExoticComponent, Suspense, useEffect, useState} from "react";
-import ComponentNotFound from "./ComponentNotFound";
-import {useTraceUpdate} from "../util/render";
-import {RemoteComponent} from "react-dynamic-remote-component";
 import {getOrLoadRemote} from "../helpers/getOrLoadRemote";
 import loadComponent from "../helpers/componentLoaderFromWebpackContainer";
 

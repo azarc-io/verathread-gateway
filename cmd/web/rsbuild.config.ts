@@ -1,4 +1,4 @@
-import {defineConfig, rspack} from '@rsbuild/core';
+import {defineConfig} from '@rsbuild/core';
 import {pluginReact} from '@rsbuild/plugin-react';
 import {ModuleFederationPlugin} from '@module-federation/enhanced/rspack';
 // @ts-expect-error complains about json import but works
@@ -6,7 +6,7 @@ import {dependencies} from './package.json';
 import CompressionPlugin from 'compression-webpack-plugin/dist';
 import * as path from "node:path";
 
-export default defineConfig(({ env, command, envMode }) => ({
+export default defineConfig(({ envMode }) => ({ //env, command,
     plugins: [
         pluginReact(),
     ],
@@ -29,7 +29,7 @@ export default defineConfig(({ env, command, envMode }) => ({
         minify: true,
     },
     tools: {
-        rspack: (config, {appendPlugins, env}) => {
+        rspack: (config, {appendPlugins}) => { // , env
             // You need to set a unique value that is not equal to other applications
             config.output!.uniqueName = 'mf_shell';
             config.output!.publicPath = "auto";
