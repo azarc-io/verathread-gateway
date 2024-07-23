@@ -292,5 +292,5 @@ tasks:
   ci:install:charts:
     desc: "Installs dependency charts"
     cmds:
-      - helm upgrade --install nats  --create-namespace ./deployment/charts/nats  --namespace $NAMESPACE --wait
-      - helm upgrade --install keydb --create-namespace ./deployment/charts/keydb --namespace $NAMESPACE --wait
+      - helm upgrade --install nats  --create-namespace ./deployment/charts/nats  --namespace $NAMESPACE --wait --set=local=false
+      - helm upgrade --install keydb --create-namespace ./deployment/charts/keydb --namespace $NAMESPACE --wait --set=local=false
