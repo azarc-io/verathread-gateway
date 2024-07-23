@@ -1,13 +1,14 @@
-NAMESPACE=vth-gateway-dev
+NAMESPACE=test-dev
 
 BIND_ADDRESS=127.0.0.1
 NATS_ADDRESS=nats://127.0.0.1:4222
+MONGO_HOST=localhost
 
-AUTH_DOMAIN=<REQUEST FROM ANOTHER DEV>
-AUTH_CLIENT_ID=<REQUEST FROM ANOTHER DEV>
-AUTH_CLIENT_SECRET=<REQUEST FROM ANOTHER DEV>
+AUTH_DOMAIN=https://dev-iq3b9wdl.us.auth0.com
+AUTH_CLIENT_ID=""
+AUTH_CLIENT_SECRET=""
 
-PROJECT_BASE_DIR=/<ABSOLUTE PATH>/verathread-gateway
-DAPRD_BIN_PATH=/<ABSOLUTE PATH>/verathread-cloud/.data/bin
+PROJECT_BASE_DIR=/Users/waeljammal/Development/golang/verathread-gateway
+DAPRD_BIN_PATH=/Users/waeljammal/Development/golang/verathread-gateway/.data/bin
 
 DAPRD_VERSION=v1.13.4-vth
