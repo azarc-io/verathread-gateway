@@ -1,0 +1,21 @@
+{{- if .Values.local }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: keydb-local
+  labels:
+    app.kubernetes.io/instance: keydb
+    app.kubernetes.io/name: keydb
+spec:
+  ports:
+    - name: client
+      protocol: TCP
+      port: 6379
+      targetPort: 6379
+      nodePort: 31379
+  selector:
+    app.kubernetes.io/instance: keydb
+    app.kubernetes.io/name: keydb
+  type: NodePort
+  sessionAffinity: None
+{{- end}}

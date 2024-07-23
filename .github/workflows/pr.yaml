@@ -381,6 +381,11 @@ jobs:
         uses: azure/setup-kubectl@v4
       - name: "Install Helm"
         uses: azure/setup-helm@v4.2.0
+      - name: "Setup Task"
+        uses: arduino/setup-task@v2
+        with:
+          version: 3.x
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
       - name: "Create Docker Login Secret"
         run: |
           kubectl create namespace qa-gateway-1 --dry-run=client -o yaml | kubectl apply -f -
@@ -391,7 +396,9 @@ jobs:
             --docker-email="wael.jammal@azarc.io" \
             --namespace=qa-gateway-1 \
             --dry-run=client -o yaml | kubectl apply -f -
-      - name: "Deploy Chart"
+      - name: "Upgrade Charts"
+        run: task ci:install:charts
+      - name: "Deploy Gateway Chart"
         run: |
           helm upgrade vth-gateway deployment/charts/gateway \
             --install --wait --atomic --create-namespace --timeout=2m \
