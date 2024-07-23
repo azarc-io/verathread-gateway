@@ -10,14 +10,14 @@ const bHost = window.location.host;
 let apiBaseUri = `http://${bHost}/graphql`;
 let wsBaseUri = `ws://${bHost}/graphql`;
 
-if (import.meta.env.PRODUCTION) {
+if (import.meta.env.PUBLIC_PRODUCTION) {
     // const domain = window.location.hostname.split('.')[0];
     apiBaseUri = `https://${bHost}/graphql`;
     wsBaseUri = `wss://${bHost}/graphql`;
 }
 
 console.log('env', process.env.NODE_ENV)
-console.log('production', import.meta.env.PRODUCTION)
+console.log('production', import.meta.env.PUBLIC_PRODUCTION)
 console.log('api url', apiBaseUri)
 console.log('socket url', wsBaseUri)
 
