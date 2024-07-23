@@ -354,6 +354,8 @@ jobs:
     name: "Promote To QA"
     runs-on: ubuntu-latest
     environment: qa
+    env:
+      NAMESPACE: "qa-gateway-1"
     needs:
       - e2e
     steps:
