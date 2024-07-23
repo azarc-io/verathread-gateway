@@ -16,7 +16,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/azarc-io/verathread-gateway/internal/util"
+	apputil "github.com/azarc-io/verathread-gateway/internal/util"
 	"github.com/erni27/imcache"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"

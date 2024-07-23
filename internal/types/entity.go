@@ -1,7 +1,8 @@
-package apptypes
+package types
 
 import (
 	"encoding/json"
+
 	"github.com/azarc-io/verathread-gateway/internal/gql/graph/common/model"
 	"time"
 )

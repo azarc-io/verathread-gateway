@@ -1,4 +1,4 @@
-package apptypes
+package types
 
 import (
 	"context"

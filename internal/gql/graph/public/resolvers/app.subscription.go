@@ -10,7 +10,7 @@ import (
 
 	"github.com/azarc-io/verathread-gateway/internal/gql/graph/common/model"
 	pubgraph "github.com/azarc-io/verathread-gateway/internal/gql/graph/public"
-	apptypes "github.com/azarc-io/verathread-gateway/internal/types"
+	types "github.com/azarc-io/verathread-gateway/internal/types"
 	nats "github.com/nats-io/nats.go"
 	"github.com/rs/zerolog/log"
 )
@@ -36,7 +36,7 @@ func (r *subscriptionResolver) ShellConfiguration(ctx context.Context, tenantID 
 		}
 
 		// subscribe to patch updates
-		sub, err = nc.Subscribe(apptypes.ShellConfigurationUpdatedSubject, func(msg *nats.Msg) {
+		sub, err = nc.Subscribe(types.ShellConfigurationUpdatedSubject, func(msg *nats.Msg) {
 			if cfg, err := r.InternalService.GetAppConfiguration(ctx, tenantID); err != nil {
 				log.Warn().Err(err).Msgf("failed to fetch app configuration for shell sync")
 			} else {

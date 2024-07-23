@@ -1,21 +1,19 @@
 package apputil
 
 import (
-	"os"
-	"regexp"
-	"strings"
-)
-
-import (
 	"bytes"
 	"crypto/md5" //nolint:gosec
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"os"
+	"path"
+	"regexp"
+	"strings"
+
 	apptypes "github.com/azarc-io/verathread-gateway/internal/types"
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog/log"
-	"path"
 )
 
 var hmrRegex = regexp.MustCompile(`(?m)const socketUrl = getSocketUrl\(\((.*)\)\)`)

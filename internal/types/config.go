@@ -1,4 +1,4 @@
-package apptypes
+package types
 
 import (
 	authzuc "github.com/azarc-io/verathread-next-common/usecase/authz"

@@ -1,4 +1,4 @@
-package apptypes
+package types
 
 type (
 	AppAddedOrUpdatedEvent struct {
