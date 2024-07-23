@@ -15,12 +15,14 @@ ingress:
   rules:
     - host: qa-gateway-1.dev.cloud.azarc.dev
       service: gateway
+      servicePort: public-http
       paths:
         - /graphql
-        - /module
-        - /api
+        - /app
+        - /health
     - host: qa-gateway-1.dev.cloud.azarc.dev
       service: gateway-web
+      servicePort: public-http
       paths:
         - /
 configuration:
