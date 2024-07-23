@@ -6,9 +6,11 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/azarc-io/verathread-gateway/internal/gql/graph/model"
+	"github.com/azarc-io/verathread-gateway/internal/gql/graph/common/model"
+	util2 "github.com/azarc-io/verathread-gateway/internal/gql/graph/util"
+	"github.com/rs/zerolog/log"
+
 	apptypes "github.com/azarc-io/verathread-gateway/internal/types"
-	"github.com/azarc-io/verathread-next-common/common/app"
 	"github.com/azarc-io/verathread-next-common/util"
 )
 
@@ -23,11 +25,12 @@ const (
 	DashboardCategory = 2
 )
 
-func MapNavigationToNavigationInput(n *apptypes.Navigation, an *app.RegisterAppNavigationInput) {
+// MapNavInputToNavEntity maps gql navigation data to entity data
+func MapNavInputToNavEntity(an *model.RegisterAppNavigationInput, n *apptypes.Navigation) {
 	n.Title = an.Title
-	n.SubTitle = util.Ptr(an.SubTitle)
-	n.AuthRequired = util.Ptr(an.AuthRequired)
-	n.Hidden = util.Ptr(an.Hidden)
+	n.SubTitle = an.SubTitle
+	n.AuthRequired = an.AuthRequired
+	n.Hidden = an.Hidden
 	n.Children = make([]*apptypes.Navigation, 0)
 	n.Category = an.Category
 
@@ -42,15 +45,16 @@ func MapNavigationToNavigationInput(n *apptypes.Navigation, an *app.RegisterAppN
 
 	for _, child := range an.Children {
 		nc := &apptypes.Navigation{}
-		MapChildNavigationToNavigationInput(nc, child)
+		MapChildNavInputToNavEntity(nc, child)
 		n.Children = append(n.Children, nc)
 	}
 }
 
-func MapChildNavigationToNavigationInput(n *apptypes.Navigation, an *app.RegisterChildAppNavigationInput) {
+// MapChildNavInputToNavEntity maps child navigation to entity
+func MapChildNavInputToNavEntity(n *apptypes.Navigation, an *model.RegisterChildAppNavigationInput) {
 	n.Title = an.Title
-	n.SubTitle = util.Ptr(an.SubTitle)
-	n.AuthRequired = util.Ptr(an.AuthRequired)
+	n.SubTitle = an.SubTitle
+	n.AuthRequired = an.AuthRequired
 	n.Children = make([]*apptypes.Navigation, 0)
 
 	if an.Module != nil {
@@ -64,11 +68,12 @@ func MapChildNavigationToNavigationInput(n *apptypes.Navigation, an *app.Registe
 
 	for _, child := range an.Children {
 		nc := &apptypes.Navigation{}
-		MapChildNavigationToNavigationInput(nc, child)
+		MapChildNavInputToNavEntity(nc, child)
 		n.Children = append(n.Children, nc)
 	}
 }
 
+// MapAppsToNavigation maps apps to shell configuration data for the gql api
 func MapAppsToNavigation(data []*apptypes.App) *model.ShellConfiguration {
 	result := &model.ShellConfiguration{
 		DefaultRoute: util.Ptr(""),
@@ -79,19 +84,19 @@ func MapAppsToNavigation(data []*apptypes.App) *model.ShellConfiguration {
 		appCategory = &model.ShellNavigationCategory{
 			Title:    "Apps",
 			Priority: AppPriority,
-			Category: app.CategoryApp,
+			Category: model.RegisterAppCategoryApp,
 			Entries:  make([]*model.ShellNavigation, 0),
 		}
 		settingsCategory = &model.ShellNavigationCategory{
 			Title:    "Settings",
 			Priority: SettingsPriority,
-			Category: app.CategorySetting,
+			Category: model.RegisterAppCategorySetting,
 			Entries:  make([]*model.ShellNavigation, 0),
 		}
 		dashboardCategory = &model.ShellNavigationCategory{
 			Title:    "Dashboards",
 			Priority: DashboardCategory,
-			Category: app.CategoryDashboard,
+			Category: model.RegisterAppCategoryDashboard,
 			Entries:  make([]*model.ShellNavigation, 0),
 		}
 
@@ -112,7 +117,7 @@ func MapAppsToNavigation(data []*apptypes.App) *model.ShellConfiguration {
 				Path:          slot.Module.Path,
 				ExposedModule: slot.Module.ExposedModule,
 				ModuleName:    slot.Module.ModuleName,
-				RemoteEntry:   fmt.Sprintf("%s/%s", a.BaseURL, a.RemoteEntry),
+				RemoteEntry:   fmt.Sprintf("%s/%s", a.WebURL, a.RemoteEntry),
 			},
 		})
 
@@ -149,17 +154,19 @@ func MapAppsToNavigation(data []*apptypes.App) *model.ShellConfiguration {
 
 			for _, navigation := range a.Navigation {
 				e := &model.ShellNavigation{}
-				e.MapFromEntity(navigation, a.Available)
+				util2.MapFromEntity(e, navigation, a.Available)
 
 				switch navigation.Category {
-				case app.CategoryDashboard:
+				case model.RegisterAppCategoryDashboard:
 					dashboardCategory.Entries = append(dashboardCategory.Entries, e)
-				case app.CategoryApp:
+				case model.RegisterAppCategoryApp:
 					appCategory.Entries = append(appCategory.Entries, e)
-				case app.CategorySetting:
+				case model.RegisterAppCategorySetting:
 					settingsCategory.Entries = append(settingsCategory.Entries, e)
 				}
 			}
+		} else {
+			log.Warn().Msgf("navigation data is empty")
 		}
 
 		// register azarc slots first
@@ -180,7 +187,8 @@ func MapAppsToNavigation(data []*apptypes.App) *model.ShellConfiguration {
 	return result
 }
 
-func MapRegisterSlotToEntity(req *app.RegisterAppSlot) *apptypes.NavigationSlot {
+// MapRegisterSlotToEntity maps slot model to slot entity
+func MapRegisterSlotToEntity(req *model.RegisterAppSlot) *apptypes.NavigationSlot {
 	return &apptypes.NavigationSlot{
 		Description:  req.Description,
 		AuthRequired: req.AuthRequired,

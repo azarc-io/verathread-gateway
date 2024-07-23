@@ -489,6 +489,13 @@
   dependencies:
     regenerator-runtime "^0.14.0"
 
+"@babel/runtime@^7.15.4":
+  version "7.24.8"
+  resolved "https://registry.yarnpkg.com/@babel/runtime/-/runtime-7.24.8.tgz#5d958c3827b13cc6d05e038c07fb2e5e3420d82e"
+  integrity sha512-5F7SDGs1T72ZczbRwbGO9lQi0NLjQxzl6i4lJxLxfW9U5UluCSyEJeniWvnhl3/euNiqQVbo8zruhsDfid0esA==
+  dependencies:
+    regenerator-runtime "^0.14.0"
+
 "@babel/template@^7.18.10", "@babel/template@^7.20.7", "@babel/template@^7.24.7":
   version "7.24.7"
   resolved "https://registry.yarnpkg.com/@babel/template/-/template-7.24.7.tgz#02efcee317d0609d2c07117cb70ef8fb17ab7315"
@@ -4400,6 +4407,13 @@ react-dom@18.3.1:
   dependencies:
     loose-envify "^1.1.0"
     scheduler "^0.23.2"
+
+react-dynamic-remote-component@^0.0.5:
+  version "0.0.5"
+  resolved "https://registry.yarnpkg.com/react-dynamic-remote-component/-/react-dynamic-remote-component-0.0.5.tgz#d3fbf9b82c061a03c335f2897b174af422a0e090"
+  integrity sha512-Bty+vjc1cgwkm+oAI+Xp7BvHies8U3Sm9TYNqEdPgi8uzMyqYrxsqjCaGKL+HhbAHWgrKeMb5nPq0FKh9jB7aA==
+  dependencies:
+    "@babel/runtime" "^7.15.4"
 
 react-is@^16.13.1, react-is@^16.7.0:
   version "16.13.1"

@@ -31,7 +31,7 @@ spec:
               service:
                 name:  {{ tpl $rule.service $ | quote }}
                 port:
-                  name: {{ $ingress.servicePort }}
+                  name: {{ $rule.servicePort }}
             {{- else }}
             backend:
               serviceName: {{ include "service.fullname" $ }}

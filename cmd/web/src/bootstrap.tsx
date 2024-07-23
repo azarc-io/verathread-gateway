@@ -6,10 +6,11 @@ import {BrowserRouter} from "react-router-dom";
 import { WebSocketLink } from "@apollo/client/link/ws";
 import {getMainDefinition} from "@apollo/client/utilities";
 
-let apiBaseUri = import.meta.env.PUBLIC_API_BASE_URL;
-let wsBaseUri = import.meta.env.PUBLIC_API_BASE_WS_URL;
+const bHost = window.location.host;
+let apiBaseUri = `http://${bHost}/graphql`;
+let wsBaseUri = `ws://${bHost}/graphql`;
 
-if (process.env.NODE_ENV == "production") {
+if (import.meta.env.PRODUCTION) {
     // const domain = window.location.hostname.split('.')[0];
     const bHost = window.location.host;
     apiBaseUri = `https://${bHost}/graphql`;

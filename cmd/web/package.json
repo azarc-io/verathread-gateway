@@ -4,7 +4,9 @@
   "version": "1.0.0",
   "scripts": {
     "build": "rsbuild build",
+    "build:dev": "rsbuild build",
     "dev": "rsbuild dev",
+    "dev:tilt": "rsbuild dev --env-mode tilt",
     "format": "prettier --write .",
     "lint": "eslint .",
     "preview": "rsbuild preview",

@@ -9,8 +9,9 @@ import (
 	"strconv"
 	"strings"
 
+	appuc "github.com/azarc-io/verathread-next-common/usecase/app"
+
 	"github.com/azarc-io/verathread-next-common/common/app"
-	appdapruc "github.com/azarc-io/verathread-next-common/usecase/app_dapr"
 	dapruc "github.com/azarc-io/verathread-next-common/usecase/dapr"
 	devuc "github.com/azarc-io/verathread-next-common/usecase/dev"
 	httpuc "github.com/azarc-io/verathread-next-common/usecase/http"
@@ -90,49 +91,47 @@ func main() {
 	<-initDevMode(ctx, cfg.Development, stoppedCh)
 
 	// initialize the app registration use case
-	app := appdapruc.NewAppUseCase(
-		appdapruc.WithDaprUseCase(dapr),
-		appdapruc.WithLogger(l),
-		appdapruc.WithAppInfo(&app.RegisterAppInput{
+	app := appuc.NewAppUseCase(
+		appuc.WithGatewayUrl("http://dev.cluster.local/grqphql"),
+		appuc.WithLogger(l),
+		appuc.WithAppInfo(app.RegisterAppInput{
 			Name:            "gateway-example", // the gateway will use this name to proxy e.g. /module/user/*
 			Package:         "vth:azarc:gateway:example",
 			Version:         "1.0.0", // TODO inject from ci and use here
 			ApiUrl:          fmt.Sprintf("http://%s/graphql", net.JoinHostPort(cfg.HTTP.Address, strconv.Itoa(cfg.HTTP.Port))),
-			ApiWsUrl:        fmt.Sprintf("ws://%s/graphql", net.JoinHostPort(cfg.HTTP.Address, strconv.Itoa(cfg.HTTP.Port))),
-			ProxyApi:        true,
 			RemoteEntryFile: "remoteEntry.js", // if proxy is true then don't need url here
-			BaseUrl:         fmt.Sprintf("%s/module/%s", cfg.Registration.WebBaseURL, Domain),
+			WebUrl:          fmt.Sprintf("%s/app/%s", cfg.Registration.WebBaseURL, Domain),
 			Proxy:           false,
-			Slot1: &app.RegisterAppSlot{
+			Slot1: app.RegisterAppSlot{
 				Description:  "Slot 1 module has no path so it must be a drop down",
 				AuthRequired: false,
-				Module: &app.RegisterAppSlotModule{
+				Module: app.RegisterAppSlotModule{
 					ExposedModule: "./AppSlot1Module",
 					ModuleName:    "AppSlot1Module",
 				},
 			},
-			Slot2: &app.RegisterAppSlot{
+			Slot2: app.RegisterAppSlot{
 				Description:  "Slot 2 module has no path so it must be a drop down",
 				AuthRequired: false,
-				Module: &app.RegisterAppSlotModule{
+				Module: app.RegisterAppSlotModule{
 					ExposedModule: "./AppSlot2Module",
 					ModuleName:    "AppSlot2Module",
 				},
 			},
-			Slot3: &app.RegisterAppSlot{
+			Slot3: app.RegisterAppSlot{
 				Description:  "Slot 3 module has a path so it just a shortcut to a navigable path",
 				AuthRequired: false,
-				Module: &app.RegisterAppSlotModule{
+				Module: app.RegisterAppSlotModule{
 					ExposedModule: "./AppSlot3Module",
 					ModuleName:    "AppSlot3Module",
 					Path:          "/rune",
 				},
 			},
-			Navigation: []*app.RegisterAppNavigationInput{
+			Navigation: []app.RegisterAppNavigationInput{
 				{
 					Title:    "Example App Root",
 					SubTitle: "Example root entry",
-					Module: &app.RegisterAppModule{
+					Module: app.RegisterAppModule{
 						ExposedModule: "./AppModule",
 						ModuleName:    "ExampleModule",
 						Path:          "/rune",
@@ -140,8 +139,8 @@ func main() {
 					AuthRequired: true,
 					Hidden:       false,
 					Proxy:        true,
-					Category:     app.CategorySetting,
-					Children: []*app.RegisterChildAppNavigationInput{
+					Category:     app.RegisterAppCategorySetting,
+					Children: []app.RegisterChildAppNavigationInput{
 						{
 							Title:        "Example App Child 1",
 							SubTitle:     "Example child entry",

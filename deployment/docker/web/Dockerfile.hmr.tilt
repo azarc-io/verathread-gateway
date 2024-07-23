@@ -1,9 +1,9 @@
-FROM node:20
+FROM node:20-slim
 WORKDIR /src
 ADD cmd/web/package.json package.json
 ADD cmd/web/yarn.lock yarn.lock
 RUN yarn install
 
-ENTRYPOINT yarn dev
+ENTRYPOINT yarn dev:tilt
 
 ADD cmd/web /src

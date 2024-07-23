@@ -7,8 +7,10 @@ metadata:
     app: {{ include "service.fullname" . }}
 spec:
   ports:
-    - port: {{ .Values.bind.http }}
-      name: http
+    - port: {{ .Values.bind.publicHttp }}
+      name: public-http
+    - port: {{ .Values.bind.privateHttp }}
+      name: private-http
 {{- if eq .Values.dev true }}
     - port: {{ .Values.bind.debug }}
       name: debug

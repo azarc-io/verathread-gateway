@@ -1,234 +1,314 @@
-# This file was generated. Do not edit manually.
-
 schema {
-    query: Query
-    mutation: Mutation
-    subscription: Subscription
+  query: Query
+  mutation: Mutation
+  subscription: Subscription
 }
 
-directive @tag(name: String!) on SCALAR | OBJECT | FIELD_DEFINITION | ARGUMENT_DEFINITION | INTERFACE | UNION | ENUM | ENUM_VALUE | INPUT_OBJECT | INPUT_FIELD_DEFINITION
+directive @goField(forceResolver: String, name: String) on FIELD_DEFINITION | INPUT_FIELD_DEFINITION
 
-type KeepAliveAppOutput {
-    ok: Boolean!
-    registrationRequired: Boolean!
-}
+directive @nestedQueries on INPUT_FIELD_DEFINITION
 
-type Mutation {
-    keepAlive(input: KeepAliveAppInput): KeepAliveAppOutput!
-    registerApp(input: RegisterAppInput!): RegisterAppOutput!
-}
+directive @query on INPUT_FIELD_DEFINITION
 
-type PageInfo {
-    next: Int!
-    page: Int!
-    perPage: Int!
-    prev: Int!
-    total: Int!
-    totalPage: Int!
-}
+directive @queryCondition on INPUT_FIELD_DEFINITION
 
-type Query {
-    registeredApps(page: Page!, sort: RegisteredAppsSort, where: RegisteredAppsWhereRules): RegisteredAppsPage
-    shellConfiguration(tenantId: String!): ShellConfiguration!
-}
+directive @queryField on INPUT_FIELD_DEFINITION
 
-type RegisterAppOutput {
-    id: String!
-}
+directive @queryFieldExists on INPUT_FIELD_DEFINITION
 
-type RegisteredApp {
-    createdAt: Time
-    name: String
-    pkg: String!
-    updatedAt: Time
-}
+directive @queryFields on INPUT_FIELD_DEFINITION
 
-type RegisteredAppsPage {
-    data: [RegisteredApp]
-    page: PageInfo!
-}
+directive @queryOp on INPUT_FIELD_DEFINITION
 
-type ShellConfiguration {
-    defaultRoute: String
-    navigation: [ShellNavigation]
-}
+directive @queryRules on INPUT_FIELD_DEFINITION
 
-type ShellConfigurationSubscription {
-    configuration: ShellConfiguration!
-    eventType: ShellConfigEventType!
-}
+directive @queryType(type: QueryType!) on INPUT_FIELD_DEFINITION
 
-type ShellNavigation {
-    authRequired: Boolean
-    category: RegisterAppCategory!
-    children: [ShellNavigationChild]
-    exposedModule: String
-    healthy: Boolean!
-    hidden: Boolean
-    id: String!
-    moduleName: String
-    outlet: String
-    path: String
-    remoteEntry: String
-    root: Boolean
-    slug: String!
-    subTitle: String
-    title: String!
-}
+directive @queryValue on INPUT_FIELD_DEFINITION
 
-type ShellNavigationChild {
-    authRequired: Boolean
-    children: [ShellNavigationChild]
-    exposedModule: String
-    healthy: Boolean!
-    hidden: Boolean
-    id: String!
-    moduleName: String
-    outlet: String
-    path: String
-    remoteEntry: String
-    slug: String!
-    subTitle: String
-    title: String!
-}
+directive @ref(dependencies: [String], field: String) on FIELD_DEFINITION | INPUT_FIELD_DEFINITION
 
-type Subscription {
-    shellConfiguration(events: [ShellConfigEventType!]!, tenantId: String!): ShellConfigurationSubscription!
-}
+directive @refRoot(id: RefRoot!) on FIELD_DEFINITION
 
-type TagValue {
-    Value: Any!
-}
+directive @validation(constraint: String!) on ARGUMENT_DEFINITION | INPUT_FIELD_DEFINITION
 
-type TagValues {
-    Key: String!
-    Values: [TagValue]
-}
-
-enum QueryCondition {
-    And
-    Or
-}
-
-enum QueryOperators {
-    Contains
-    Equal
-    GreaterThan
-    GreaterThanOrEqual
-    In
-    LessThan
-    LessThanOrEqual
-    NotEqual
-    NotIn
-    Regex
-}
-
-enum QueryType {
-    Date
-    Deleted
-}
-
-enum RefRoot {
-    AppRef
-}
-
-enum RegisterAppCategory {
-    App
-    Dashboard
-    Global
-    Setting
-    Slot
-}
-
-enum ShellConfigEventType {
-    Added
-    Initial
-    Rebuild
-    Removed
-    Updated
-}
-
-enum SortType {
-    ASC
-    DES
-}
+directive @warden(action: String!, filterField: String, resource: String!, resourceKey: String) on FIELD_DEFINITION
 
 scalar Any
 
 scalar Duration
 
-scalar Time
-
 input KeepAliveAppInput {
-    pkg: String!
-    version: String!
+  name: String!
+  pkg: String!
+  version: String!
+}
+
+type KeepAliveAppOutput {
+  ok: Boolean!
+  registrationRequired: Boolean!
+}
+
+type Mutation {
+  keepAlive(input: KeepAliveAppInput): KeepAliveAppOutput!
+  registerApp(input: RegisterAppInput!): RegisterAppOutput!
 }
 
 input Page {
-    limit: Int
-    page: Int
+  limit: Int @ref(field: "limit")
+  page: Int @ref(field: "page")
+}
+
+type PageInfo {
+  next: Int!
+  page: Int!
+  perPage: Int!
+  prev: Int!
+  total: Int!
+  totalPage: Int!
+}
+
+type Query {
+  registeredApps(page: Page!, sort: RegisteredAppsSort, where: RegisteredAppsWhereRules): RegisteredAppsPage
+  shellConfiguration(tenantId: String!): ShellConfiguration!
+}
+
+enum QueryCondition {
+  And
+  Or
 }
 
 input QueryOperatorAndDate {
-    op: QueryOperators!
-    value: Time
+  op: QueryOperators! @queryOp
+  value: Time @queryValue
 }
 
 input QueryOperatorAndValue {
-    op: QueryOperators!
-    value: Any
+  op: QueryOperators! @queryOp
+  value: Any @queryValue
 }
 
 input QueryOperatorFieldAndValue {
-    exists: Boolean
-    field: String!
-    op: QueryOperators!
-    value: Any
+  exists: Boolean @queryFieldExists
+  field: String! @queryField
+  op: QueryOperators! @queryOp
+  value: Any @queryValue
+}
+
+enum QueryOperators {
+  Contains
+  Equal
+  GreaterThan
+  GreaterThanOrEqual
+  In
+  LessThan
+  LessThanOrEqual
+  NotEqual
+  NotIn
+  Regex
+}
+
+enum QueryType {
+  Date
+  Deleted
 }
 
 input QueryValue {
-    value: Any
+  value: Any @queryValue
+}
+
+enum RefRoot {
+  AppRef
+}
+
+enum RegisterAppCategory {
+  App
+  Dashboard
+  Setting
 }
 
 input RegisterAppInput {
-    apiUrl: String!
-    apiWsUrl: String!
-    name: String!
-    navigation: [RegisterAppNavigationInput]
-    package: String!
-    proxyApi: Boolean!
-    version: String!
+  apiUrl: String!
+  id: String!
+  name: String!
+  navigation: [RegisterAppNavigationInput]
+  package: String!
+  proxy: Boolean!
+  remoteEntryFile: String!
+  slot1: RegisterAppSlot
+  slot2: RegisterAppSlot
+  slot3: RegisterAppSlot
+  version: String!
+  webUrl: String!
+}
+
+input RegisterAppModule {
+  exposedModule: String!
+  moduleName: String!
+  outlet: String!
+  path: String!
 }
 
 input RegisterAppNavigationInput {
-    title: String!
-    subTitle: String
-    authRequired: Boolean
-    hidden: Boolean
-    category: RegisterAppCategory!
-    children: [RegisterAppNavigationInput]
-    proxy: Boolean!
+  authRequired: Boolean!
+  category: RegisterAppCategory!
+  children: [RegisterChildAppNavigationInput]
+  hidden: Boolean!
+  icon: String!
+  module: RegisterAppModule!
+  proxy: Boolean!
+  subTitle: String!
+  title: String!
+}
+
+type RegisterAppOutput {
+  id: String!
+}
+
+input RegisterAppSlot {
+  authRequired: Boolean!
+  description: String!
+  module: RegisterAppSlotModule!
+}
+
+input RegisterAppSlotModule {
+  exposedModule: String!
+  moduleName: String!
+  path: String!
+}
+
+input RegisterChildAppNavigationInput {
+  authRequired: Boolean!
+  children: [RegisterChildAppNavigationInput]
+  icon: String!
+  module: RegisterAppModule!
+  path: String!
+  subTitle: String!
+  title: String!
+}
+
+type RegisteredApp {
+  createdAt: Time @ref(field: "created_at")
+  name: String @ref(field: "name")
+  pkg: String! @ref(field: "package")
+  updatedAt: Time @ref(field: "updated_at")
 }
 
 input RegisteredAppQueryFields {
-    createdAt: QueryOperatorAndDate
-    name: QueryOperatorAndValue
-    updatedAt: QueryOperatorAndDate
+  createdAt: QueryOperatorAndDate @ref(field: "created_at") @queryType(type: Date)
+  name: QueryOperatorAndValue @ref(field: "name")
+  updatedAt: QueryOperatorAndDate @ref(field: "updated_at") @queryType(type: Date)
+}
+
+type RegisteredAppsPage {
+  data: [RegisteredApp] @refRoot(id: AppRef)
+  page: PageInfo!
 }
 
 input RegisteredAppsSort {
-    createdAt: SortType
-    name: SortType
-    updatedAt: SortType
+  createdAt: SortType @ref(field: "created_at") @queryType(type: Date)
+  name: SortType @ref(field: "name")
+  updatedAt: SortType @ref(field: "updated_at") @queryType(type: Date)
 }
 
 input RegisteredAppsWhereRules {
-    condition: QueryCondition!
-    fields: [RegisteredAppQueryFields]
-    rules: [RegisteredAppsWhereRules]
+  condition: QueryCondition! @queryCondition
+  fields: [RegisteredAppQueryFields] @queryOp
+  rules: [RegisteredAppsWhereRules] @queryRules
+}
+
+enum ShellConfigEventType {
+  Added
+  Initial
+  Rebuild
+  Removed
+  Updated
+}
+
+type ShellConfiguration {
+  categories: [ShellNavigationCategory]
+  defaultRoute: String
+  slots: [ShellNavigationSlot]
+}
+
+type ShellConfigurationSubscription {
+  configuration: ShellConfiguration!
+  eventType: ShellConfigEventType!
+}
+
+type ShellNavigation {
+  authRequired: Boolean! @ref(field: "authRequired")
+  children: [ShellNavigationChild] @ref(field: "children")
+  healthy: Boolean! @ref(field: "available")
+  hidden: Boolean! @ref(field: "hidden")
+  icon: String! @ref(field: "icon")
+  id: String! @ref(field: "_id")
+  module: ShellNavigationModule! @ref(field: "module")
+  subTitle: String! @ref(field: "subTitle")
+  title: String! @ref(field: "title")
+}
+
+type ShellNavigationCategory {
+  category: RegisterAppCategory!
+  entries: [ShellNavigation]
+  priority: Int!
+  title: String!
+}
+
+type ShellNavigationChild {
+  authRequired: Boolean! @ref(field: "authRequired")
+  children: [ShellNavigationChild] @ref(field: "children")
+  healthy: Boolean! @ref(field: "available")
+  icon: String! @ref(field: "icon")
+  module: ShellNavigationModule! @ref(field: "module")
+  subTitle: String! @ref(field: "subTitle")
+  title: String! @ref(field: "title")
+}
+
+type ShellNavigationModule {
+  exposedModule: String! @ref(field: "exposedModule")
+  moduleName: String! @ref(field: "moduleName")
+  outlet: String! @ref(field: "outlet")
+  path: String! @ref(field: "path")
+  remoteEntry: String! @ref(field: "remoteEntry")
+}
+
+type ShellNavigationSlot {
+  authRequired: Boolean @ref(field: "authRequired")
+  description: String! @ref(field: "description")
+  module: ShellNavigationSlotModule! @ref(field: "module")
+  priority: Int
+  slot: String! @ref(field: "slot")
+}
+
+type ShellNavigationSlotModule {
+  exposedModule: String! @ref(field: "exposedModule")
+  moduleName: String! @ref(field: "moduleName")
+  path: String! @ref(field: "path")
+  remoteEntry: String! @ref(field: "remoteEntry")
 }
 
 input Sort {
-    key: String!
-    type: SortType!
+  key: String!
+  type: SortType!
 }
+
+enum SortType {
+  ASC
+  DES
+}
+
+type Subscription {
+  shellConfiguration(events: [ShellConfigEventType!]!, tenantId: String!): ShellConfigurationSubscription!
+}
+
+type TagValue {
+  Value: Any! @ref(field: "value")
+}
+
+type TagValues {
+  Key: String! @ref(field: "key")
+  Values: [TagValue] @ref(field: "values")
+}
+
+scalar Time

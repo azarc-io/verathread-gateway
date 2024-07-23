@@ -9,10 +9,10 @@ spec:
   ports:
     {{- if .Values.hmr }}
     - port: {{ .Values.bind.hmr }}
-      name: http
+      name: hmr
     {{- else }}
-    - port: {{ .Values.bind.http }}
-      name: http
+    - port: {{ .Values.bind.publicHttp }}
+      name: public-http
     {{- end }}
   clusterIP: None
   selector:
