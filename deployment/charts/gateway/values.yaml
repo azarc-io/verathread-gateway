@@ -71,12 +71,7 @@ ingress:
         - /graphql
         - /app
         - /health
-    - host: dev.cluster.local
-      service: gateway-web
-      servicePort: public-http
-      paths:
         - /
-        - /rsbuild-hmr
 
 # Service configuration
 configuration:
