@@ -102,6 +102,15 @@ if hmr:
 # non hmr mode will simply sync your local dist folder, you can use vite build --watch
 # in this mode the gateway will serve the files and the side car becomes an ephemeral initContainer
 else:
+    local_resource(
+      'gateway-compile-web',
+      'yarn build --env-mode tilt',
+      dir="./cmd/web",
+      deps=['./cmd/web'],
+      ignore=['./cmd/web/node_modules', './cmd/web/dist'],
+      labels=["compile-web"],
+      resource_deps=[]
+    )
     docker_build_with_restart(
       'vth-gateway-web',
       context='.',

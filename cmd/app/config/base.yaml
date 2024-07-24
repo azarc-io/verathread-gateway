@@ -43,7 +43,8 @@ http:
       - HEAD
 
 gateway:
-  web_dir: ${PROJECT_BASE_DIR}/cmd/web2/dist
+#  web_dir: ${PROJECT_BASE_DIR}/cmd/web2/dist
+  web_proxy: http://localhost:3000
   backoffice_org: org_hiUmCjtFR7ZgEckN
   metrics:
     address: ${BIND_ADDRESS}

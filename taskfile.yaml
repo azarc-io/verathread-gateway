@@ -35,7 +35,6 @@ tasks:
     env:
       CONFIG_DIR: cmd/app/config
       BASE_CONTEXT: base
-      DAPR_GRPC_PORT: 6011
       MONGO_HOST: localhost
 
   dev:fe:
