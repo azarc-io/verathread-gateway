@@ -3,87 +3,54 @@
   # GLOBAL COMMON SERVICES
   ##################################################################################
 
-#  shell-fe:
-#    build:
-#      context: .
-#      dockerfile: "deployment/docker/web/Dockerfile.dev"
-#    ports:
-#      - "3000:3000"
-#    environment:
-#      NODE_ENV: development
-#
-#  example-fe:
-#    build:
-#      context: .
-#      dockerfile: "example/docker/web/Dockerfile.dev"
-#    ports:
-#      - "3001:3001"
-#    environment:
-#      NODE_ENV: development
-#    volumes:
-#      - ./example/web/package.json:/src/package.json
-#      - ./example/web/yarn.lock:/src/yarn.lock
-#      - ./example/web:/src
+  shell-fe:
+    build:
+      context: .
+      dockerfile: "deployment/docker/web/Dockerfile.dev"
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: development
+      VERSION: 1
+    volumes:
+      - ./cmd/web:/src
+
+  example-fe:
+    build:
+      context: .
+      dockerfile: "example/docker/web/Dockerfile.dev"
+    ports:
+      - "3001:3001"
+    environment:
+      NODE_ENV: development
+    volumes:
+      - ./example/web:/src
 
   gateway:
-    image: ghcr.io/azarc-io/verathread-gateway/gateway-be:v1.51.0
+    image: ghcr.io/azarc-io/verathread-gateway/gateway-be:RPP-6-315-100c87b1
     environment:
       CONFIG_DIR: /config
-      BASE_CONTEXT: metalogix
-      DAPRD_BIN_PATH: /src/.data/bin
+      BASE_CONTEXT: base
+      CONFIG_CONTEXTS: metalogix
       AUTH_DOMAIN: ${AUTH_DOMAIN}
-      DAPR_GRPC_PORT: 6011
+      BIND_ADDRESS: 0.0.0.0
     volumes:
       - ./cmd/app/config:/config
     ports:
       - "6010:6010"
     depends_on:
       - mongodb_dev
-
-  gateway-dapr:
-    image: "daprio/daprd:edge"
-    command: [
-      "./daprd",
-      "--app-id", "vth-gateway",
-      "--app-port", "6010",
-      "--placement-host-address", "placement:50006", # Dapr's placement service can be reach via the docker DNS entry
-      "--resources-path", "./dapr",
-      "--dapr-grpc-port", "6011",
-      "--dapr-http-port", "6012",
-      "--config", "dapr/config/config.yaml"
-    ]
-    volumes:
-      - "./dapr/:/dapr" # Mount our components folder for the runtime to use. The mounted location must match the --resources-path argument.
-    depends_on:
-      - gateway
-      - placement
-    network_mode: "service:gateway" # Attach the gateway-dapr service to the gateway network namespace
+      - keydb
+      - nats
 
   example:
-    image: ghcr.io/azarc-io/verathread-gateway/gateway-be-example:v1.51.1-linux-amd64
+    image: ghcr.io/azarc-io/verathread-gateway/gateway-be-example:v1.51.2-linux-arm64
     environment:
       CONFIG_DIR: /config
       BASE_CONTEXT: metalogix
-      DAPR_GRPC_PORT: 6111
     volumes:
       - ./example/app/config:/config
     ports:
       - "6110:6110"
     depends_on:
       - gateway
-
-  mongodb_dev:
-    image: mongo:latest
-    container_name: mongodb_dev
-    environment:
-      MONGO_REPLICA_HOST: host.docker.internal
-      MONGO_REPLICA_PORT: 27018
-    entrypoint: >
-      /bin/bash -c '
-      echo "rs.initiate()" > /docker-entrypoint-initdb.d/1-init-replicaset.js &&
-      /usr/local/bin/docker-entrypoint.sh mongod --replSet rs0 --bind_ip_all --noauth'
-    ports:
-      - "27018:27017"
-    volumes:
-      - ./.data/mongodb:/data/db
-      - ./.data/mongodb/opt:/opt/keyfile/

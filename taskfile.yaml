@@ -95,6 +95,16 @@ tasks:
     cmds:
       - docker compose -f docker-compose.yml -f docker-compose-dev.yml build example-fe
 
+  compose:metalogix:
+    desc: "Starts up dependant services such as redis, nats and mongo and runs all apps in development mode with hot reloading"
+    cmds:
+      - docker compose -f docker-compose.yml -f docker-compose-metalogix.yml up -d
+
+  compose:metalogix:down:
+    desc: "Stops previously started containers using <compose:metalogix>"
+    cmds:
+      - docker compose -f docker-compose.yml -f docker-compose-metalogix.yml down
+
   ##############################################################################
   # EXAMPLE
   ##############################################################################
@@ -136,7 +146,7 @@ tasks:
       - GOOS=linux GOARCH=amd64 go build -gcflags="all=-N -l" -o bin/vth-gateway-example app/main.go && chmod 775 bin/vth-gateway-example
       - docker buildx build --push --platform linux/amd64 -f docker/app/Dockerfile -t ghcr.io/azarc-io/verathread-gateway/gateway-be-example:${EX_VERSION}-linux-amd64 .
     env:
-      EX_VERSION: v1.51.1
+      EX_VERSION: v1.51.2
 
   ##############################################################################
   # BUILD
