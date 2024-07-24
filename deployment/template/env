@@ -1,14 +1,13 @@
 NAMESPACE=test-dev
 
 BIND_ADDRESS=127.0.0.1
-NATS_ADDRESS=nats://127.0.0.1:4222
+NATS_ADDRESS=nats://10.0.1.34:4222
 MONGO_HOST=localhost
 
 AUTH_DOMAIN=https://dev-iq3b9wdl.us.auth0.com
-AUTH_CLIENT_ID=""
-AUTH_CLIENT_SECRET=""
+AUTH_CLIENT_ID=
+AUTH_CLIENT_SECRET=
 
 PROJECT_BASE_DIR=/Users/waeljammal/Development/golang/verathread-gateway
-DAPRD_BIN_PATH=/Users/waeljammal/Development/golang/verathread-gateway/.data/bin
 
-DAPRD_VERSION=v1.13.4-vth
+GITHUB_PAT_TOKEN=
