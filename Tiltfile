@@ -132,13 +132,14 @@ helm_resource(
   namespace=os.getenv('NAMESPACE'),
   deps=["./deployment/charts/gateway"],
   flags=[
+    '--values=./deployment/charts/gateway/values.yaml',
+    ('--values=./deployment/charts/gateway/values-hmr.yaml' if hmr else ''),
     '--set=configuration.auth.client_id=%s' % os.getenv('AUTH_CLIENT_ID'),
     '--set=configuration.auth.client_secret=%s' % os.getenv('AUTH_CLIENT_SECRET'),
     '--set=configuration.auth.domain=%s' % os.getenv('AUTH_DOMAIN'),
     '--set=dev=true',
     '--set=bind.debug=%s' % gatewayDebugPort,
     '--set=hmr=%s' % hmr,
-    '--set=webServicePort=%s' % ('hmr' if hmr else 'public-http')
   ],
   image_deps=['vth-gateway', 'vth-gateway-web'],
   image_keys=[('image.repository', 'image.tag'), ('image.web_repository', 'image.web_repository_tag')],

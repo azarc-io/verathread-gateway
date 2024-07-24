@@ -35,7 +35,7 @@ spec:
             {{- else }}
             backend:
               serviceName: {{ include "service.fullname" $ }}
-              servicePort: {{ $ingress.servicePort }}
+              servicePort: {{ $rule.servicePort }}
             {{- end }}
           {{- end }}
     {{- end }}

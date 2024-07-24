@@ -1,0 +1,26 @@
+# handles routing, is split into two / for web and /graphql and /modules for api and static file proxy
+ingress:
+  # If `true`, an Ingress is created
+  enabled: true
+  # Ingress annotations
+  annotations:
+    traefik.ingress.kubernetes.io/buffering: |
+      maxrequestbodybytes: 3750000
+      memrequestbodybytes: 3750000
+  # Additional Ingress labels
+  labels: { }
+  # List of rules for the Ingress
+  rules:
+    - host: dev.cluster.local
+      service: gateway
+      servicePort: public-http
+      paths:
+        - /graphql
+        - /app
+        - /health
+    - host: dev.cluster.local
+      service: gateway-web
+      servicePort: hmr
+      paths:
+        - /
+        - /rsbuild-hmr

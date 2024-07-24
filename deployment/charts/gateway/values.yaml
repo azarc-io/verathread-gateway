@@ -16,8 +16,6 @@ middleware_enabled: "no"
 dev: false
 # hmr for the front end
 hmr: false
-# service port to use for web
-webServicePort: &webServicePort 'public-http'
 
 fileStorage:
   enabled: false
@@ -75,7 +73,7 @@ ingress:
         - /health
     - host: dev.cluster.local
       service: gateway-web
-      servicePort: *webServicePort
+      servicePort: public-http
       paths:
         - /
         - /rsbuild-hmr
