@@ -72,25 +72,6 @@
     depends_on:
       - gateway
 
-  example-dapr:
-    image: "daprio/daprd:edge"
-    command: [
-      "./daprd",
-      "--app-id", "vth-gateway-example",
-      "--app-port", "6110",
-      "--placement-host-address", "placement:50006", # Dapr's placement service can be reach via the docker DNS entry
-      "--resources-path", "./dapr",
-      "--dapr-grpc-port", "6111",
-      "--dapr-http-port", "6112",
-      "--config", "dapr/config/config.yaml"
-    ]
-    volumes:
-      - "./dapr/:/dapr" # Mount our components folder for the runtime to use. The mounted location must match the --resources-path argument.
-    depends_on:
-      - example
-      - placement
-    network_mode: "service:example" # Attach the gateway-dapr service to the gateway network namespace
-
   mongodb_dev:
     image: mongo:latest
     container_name: mongodb_dev
@@ -106,12 +87,3 @@
     volumes:
       - ./.data/mongodb:/data/db
       - ./.data/mongodb/opt:/opt/keyfile/
-
-  placement:
-    image: "daprio/dapr"
-    command: [ "./placement", "-port", "50006" ]
-    ports:
-      - "8080:8080"
-      - "50006:50006"
-    environment:
-      DAPR_PLACEMENT_METADATA_ENABLED: "true"

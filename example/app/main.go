@@ -33,8 +33,8 @@ type (
 
 	Registration struct {
 		WebBaseURL string `yaml:"web_url"`
-		ApiBaseURL string `yaml:"api_url"`
-		GatewayUrl string `yaml:"gateway_url"`
+		APIBaseURL string `yaml:"api_url"`
+		GatewayURL string `yaml:"gateway_url"`
 	}
 )
 
@@ -99,42 +99,42 @@ func (ex *example) registerWebHandler() error {
 func (ex *example) registerApp() error {
 	// initialize the app registration use case
 	reg := appuc.NewAppUseCase(
-		appuc.WithGatewayUrl(ex.cfg.Registration.GatewayUrl),
+		appuc.WithGatewayUrl(ex.cfg.Registration.GatewayURL),
 		appuc.WithLogger(ex.log),
 		appuc.WithAppInfo(app.RegisterAppInput{
 			Id:              "gateway-example-1",
 			Name:            "gateway-example", // the gateway will use this name to proxy e.g. /module/user/*
 			Package:         "vth:azarc:gateway-example",
 			Version:         "1.0.0", // TODO inject from ci and use here
-			ApiUrl:          ex.cfg.Registration.ApiBaseURL,
+			ApiUrl:          ex.cfg.Registration.APIBaseURL,
 			RemoteEntryFile: "remoteEntry.js", // if proxy is true then don't need url here
 			WebUrl:          ex.cfg.Registration.WebBaseURL,
 			Proxy:           false,
-			//Slot1: app.RegisterAppSlot{
-			//	Description:  "Slot 1 module has no path so it must be a drop down",
-			//	AuthRequired: false,
-			//	Module: app.RegisterAppSlotModule{
-			//		ExposedModule: "./AppSlot1Module",
-			//		ModuleName:    "AppSlot1Module",
-			//	},
-			//},
-			//Slot2: app.RegisterAppSlot{
-			//	Description:  "Slot 2 module has no path so it must be a drop down",
-			//	AuthRequired: false,
-			//	Module: app.RegisterAppSlotModule{
-			//		ExposedModule: "./AppSlot2Module",
-			//		ModuleName:    "AppSlot2Module",
-			//	},
-			//},
-			//Slot3: app.RegisterAppSlot{
-			//	Description:  "Slot 3 module has a path so it just a shortcut to a navigable path",
-			//	AuthRequired: false,
-			//	Module: app.RegisterAppSlotModule{
-			//		ExposedModule: "./AppSlot3Module",
-			//		ModuleName:    "AppSlot3Module",
-			//		Path:          "/rune",
-			//	},
-			//},
+			Slot1: app.RegisterAppSlot{
+				Description:  "Slot 1 module has no path so it must be a drop down",
+				AuthRequired: false,
+				Module: app.RegisterAppSlotModule{
+					ExposedModule: "./AppSlot1Module",
+					ModuleName:    "AppSlot1Module",
+				},
+			},
+			Slot2: app.RegisterAppSlot{
+				Description:  "Slot 2 module has no path so it must be a drop down",
+				AuthRequired: false,
+				Module: app.RegisterAppSlotModule{
+					ExposedModule: "./AppSlot2Module",
+					ModuleName:    "AppSlot2Module",
+				},
+			},
+			Slot3: app.RegisterAppSlot{
+				Description:  "Slot 3 module has a path so it just a shortcut to a navigable path",
+				AuthRequired: false,
+				Module: app.RegisterAppSlotModule{
+					ExposedModule: "./AppSlot3Module",
+					ModuleName:    "AppSlot3Module",
+					Path:          "/rune",
+				},
+			},
 			Navigation: []app.RegisterAppNavigationInput{
 				{
 					Title:    "Example App Root",

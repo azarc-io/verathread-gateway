@@ -178,7 +178,7 @@ func (s *service) RegisterApp(ctx context.Context, req *model.RegisterAppInput) 
 			return nil, fmt.Errorf("failed to retrieve cached app entry: %w", err)
 		}
 
-		if err := gar.Scan(&ent); err != nil {
+		if err = gar.Scan(&ent); err != nil {
 			s.log.Error().Str("package", req.Package).Err(err).Msgf("failed to scan cached app")
 			return nil, fmt.Errorf("failed to scan cached app: %w", err)
 		}
