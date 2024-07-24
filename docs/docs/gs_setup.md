@@ -71,7 +71,7 @@ Here are some descriptions of important environment settings:
 - NAMESPACE: Set this to the first initial and last name e.g. `wael-dev`
     - **Note**: If you are using the developer toolkit then you must set this to the same namespace as defined in the toolkits `.env` file
 - BIND_ADDRESS: You should leave this as default unless you want services to be exposed on a different ip
-- MONGO_HOST: The mongodb host, this is a mongo dsn eg. `mongo://localhost:27017`
+- MONGO_DSN: The mongodb host, this is a mongo dsn eg. `mongo://localhost:27017`
 - NATS_ADDRESS: The nats server address eg. `nats://localhost:4222`
 - AUTH_DOMAIN: Ask another dev or your manager for this value, this is the auth0 domain to use
 - AUTH_CLIENT_ID: Ask another dev or your manager for this value
@@ -83,7 +83,7 @@ Here are some descriptions of important environment settings:
 
 !!! warning
 
-    Please note that you can not run both appraoches concurrently, if you want to develop using tilt then
+    Please note that you can not run multiple appraoches concurrently, if you want to develop using tilt then
     you must stop anything started in the other for eg. by running `docker compose down` if you were using docker compose and 
     want to switch to tilt. This is because both solutions expose the same ports at the host level.
 
