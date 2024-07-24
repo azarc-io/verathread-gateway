@@ -6,19 +6,14 @@ logger:
   mode: dev # or prd
 
 database:
-  host: ${MONGO_HOST}
-  port: 27017
-  user: ""
-  pass: ""
-  args: "?replicaSet=rs0&tls=false&connect=direct&retryWrites=true&w=majority"
-  scheme: ""
+  dsn: ${MONGO_DSN}
   name: vth-gateway
 
 redis:
-  address: localhost:6379
+  address: ${REDIS_ADDRESS}
 
 nats:
-  address: nats://localhost:4222
+  address: ${NATS_ADDRESS}
   drain: true
 
 http:

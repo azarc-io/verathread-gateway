@@ -1,8 +1,9 @@
 NAMESPACE=test-dev
 
 BIND_ADDRESS=127.0.0.1
-NATS_ADDRESS=nats://10.0.1.34:4222
-MONGO_HOST=localhost
+NATS_ADDRESS=nats://localhost:4222
+MONGO_DSN=mongodb%3A%2F%2Flocalhost%3A27017%2F%3FreplicaSet%3Drs0%26tls%3Dfalse%26connect%3Ddirect%26retryWrites%3Dtrue%26w%3Dmajority
+REDIS_ADDRESS=localhost:6379
 
 AUTH_DOMAIN=https://dev-iq3b9wdl.us.auth0.com
 AUTH_CLIENT_ID=
