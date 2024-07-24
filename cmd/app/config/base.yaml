@@ -14,6 +14,13 @@ database:
   scheme: ""
   name: vth-gateway
 
+redis:
+  address: localhost:6379
+
+nats:
+  address: nats://localhost:4222
+  drain: true
+
 http:
   public:
     address: ${BIND_ADDRESS}
@@ -42,9 +49,6 @@ gateway:
     address: ${BIND_ADDRESS}
     port: 6015
   services: []
-#    myService:
-#      gql: http://127.0.0.1:6030/graphql
-#      gql_ws: http://127.0.0.1:6030/graphql
 
 cluster:
   enabled: true

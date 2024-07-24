@@ -46,6 +46,55 @@ tasks:
     env:
       NODE_ENV: development
 
+  compose:
+    desc: "Starts up dependant services such as redis, nats and mongo"
+    cmds:
+      - docker compose -f docker-compose.yml up -d
+
+  compose:down:
+    desc: "Stops previously started containers using <compose>"
+    cmds:
+      - docker compose -f docker-compose.yml down
+
+  compose:dev:
+    desc: "Starts up dependant services such as redis, nats and mongo and runs all apps in development mode with hot reloading"
+    cmds:
+      - docker compose -f docker-compose.yml -f docker-compose-dev.yml up -d
+
+  compose:dev:down:
+    desc: "Stops previously started containers using <compose:dev>"
+    cmds:
+      - docker compose -f docker-compose.yml -f docker-compose-dev.yml down
+
+  compose:rebuild:
+    desc: "Rebuilds all docker containers in compose"
+    cmds:
+      - task: compose:rebuild:example:be
+      - task: compose:rebuild:gateway:be
+      - task: compose:rebuild:example:fe
+      - task: compose:rebuild:gateway:fe
+      - echo "rebuild completed"
+
+  compose:rebuild:example:be:
+    desc: "Rebuilds the example be docker image in compose"
+    cmds:
+      - docker compose -f docker-compose.yml -f docker-compose-dev.yml build example
+
+  compose:rebuild:example:fe:
+    desc: "Rebuilds the example fe docker image in compose"
+    cmds:
+      - docker compose -f docker-compose.yml -f docker-compose-dev.yml build example-fe
+
+  compose:rebuild:gateway:be:
+    desc: "Rebuilds the gateway be docker image in compose"
+    cmds:
+      - docker compose -f docker-compose.yml -f docker-compose-dev.yml build gateway
+
+  compose:rebuild:gateway:fe:
+    desc: "Rebuilds the gateway fe docker image in compose"
+    cmds:
+      - docker compose -f docker-compose.yml -f docker-compose-dev.yml build example-fe
+
   ##############################################################################
   # EXAMPLE
   ##############################################################################
@@ -68,8 +117,6 @@ tasks:
     env:
       CONFIG_DIR: app/config
       BASE_CONTEXT: base
-      DAPR_GRPC_PORT: 6111
-      MONGO_HOST: localhost
 
   example:fe:
     desc: "starts the front end in dev mode with hmr support"

@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"regexp"
 	"strings"
 	"time"
 
@@ -122,10 +123,12 @@ func (d *Domain) registerShellAppRoute() {
 		}
 
 		tgt := &apptypes.ProxyTarget{
+			ID:           "gateway",
 			Name:         "shell",
 			WebURL:       _url,
+			APIURL:       _url,
 			Meta:         nil,
-			RegexRewrite: nil,
+			RegexRewrite: map[*regexp.Regexp]string{},
 		}
 
 		grp := e.Group("")
@@ -151,13 +154,15 @@ func (d *Domain) registerShellAppRoute() {
 					return err
 				}
 
+				c.Set(apptypes.TargetURLKey, tgt.APIURL)
+				c.Set(apptypes.AppNameKey, tgt.Name)
+
 				// Proxy
 				switch {
 				case c.IsWebSocket():
 					d.proxy.proxyRaw(tgt, c).ServeHTTP(res, req)
 				case req.Header.Get(echo.HeaderAccept) == "text/event-stream":
 				default:
-					log.Info().Msgf("proxy to %s%s", tgt.WebURL, req.URL)
 					d.proxy.proxyHTTP(tgt, c).ServeHTTP(res, req)
 				}
 

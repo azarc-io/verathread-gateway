@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/url"
 	"regexp"
@@ -52,7 +53,10 @@ func (s *service) Watch() error {
 		for {
 			msg, err := s.watchSub.ReceiveMessage(s.opts.Context)
 			if err != nil {
-				s.log.Warn().Err(err).Msgf("failed to receive app exiry event from redis")
+				s.log.Warn().Err(err).Msgf("failed to receive app expiry event from redis")
+				if errors.Is(err, redis.ErrClosed) {
+					time.Sleep(time.Second)
+				}
 				continue
 			}
 
@@ -236,6 +240,11 @@ func (s *service) RegisterApp(ctx context.Context, req *model.RegisterAppInput) 
 	st := rc.HSet(ctx, "apps", ent.ID, ent)
 	if st.Err() != nil {
 		s.log.Error().Err(st.Err()).Msgf("failed to cache application")
+	}
+
+	kcmd := rc.Set(ctx, s.appKeepAliveKey(ent.Name), true, apptypes.KeepAliveTTL)
+	if kcmd.Err() != nil {
+		return nil, err
 	}
 
 	return &model.RegisterAppOutput{ID: ent.ID}, s.rebuildNavigation()

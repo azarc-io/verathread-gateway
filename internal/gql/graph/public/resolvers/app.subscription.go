@@ -10,7 +10,7 @@ import (
 
 	"github.com/azarc-io/verathread-gateway/internal/gql/graph/common/model"
 	pubgraph "github.com/azarc-io/verathread-gateway/internal/gql/graph/public"
-	types "github.com/azarc-io/verathread-gateway/internal/types"
+	"github.com/azarc-io/verathread-gateway/internal/types"
 	nats "github.com/nats-io/nats.go"
 	"github.com/rs/zerolog/log"
 )

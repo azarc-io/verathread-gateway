@@ -10,7 +10,8 @@ const bHost = window.location.host;
 let apiBaseUri = `http://${bHost}/graphql`;
 let wsBaseUri = `ws://${bHost}/graphql`;
 
-if (import.meta.env.PUBLIC_PRODUCTION) {
+if (import.meta.env.PUBLIC_PRODUCTION === "true" || import.meta.env.PUBLIC_PRODUCTION === true) {
+    console.log('running in production mode')
     // const domain = window.location.hostname.split('.')[0];
     apiBaseUri = `https://${bHost}/graphql`;
     wsBaseUri = `wss://${bHost}/graphql`;
