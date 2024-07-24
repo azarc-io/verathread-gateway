@@ -6,16 +6,16 @@ but first make sure you meet the requirements and prerequisites below.
 ### Requirements
 
 * Node 20+
-* Go 1.22.2+
-* Docker
-* Docker Compose
+* Go 1.22+
+- [Docker](https://www.docker.com/get-started/)
+- [Docker Compose](https://docs.docker.com/compose/install/)
 * Installed tools from the [Getting Started](gs_setup.md) step
 
 ### Prerequisites
 
-For both options it is required that you are not running tilt, you can instead run 
+To bring up Mongo, Nats and Redis run the following command
 ```shell
-docker-compose up -d
+task compose
 ```
 in the root of the project to bring up any dependencies before using either of the options below.
 
@@ -26,7 +26,7 @@ The first is to simply start the front end using `yarn dev` and create a run con
 Your run configuration should have the following Environment Variables set:
 
 ```shell
-BASE_CONTEXT=base;CONFIG_DIR=cmd/app/config;DAPR_GRPC_PORT=6011
+BASE_CONTEXT=base;CONFIG_DIR=cmd/app/config
 ```
 
 ![image](static/ide_run_config1.png)

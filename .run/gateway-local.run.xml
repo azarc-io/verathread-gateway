@@ -5,7 +5,6 @@
     <envs>
       <env name="BASE_CONTEXT" value="base" />
       <env name="CONFIG_DIR" value="cmd/app/config" />
-      <env name="DAPR_GRPC_PORT" value="6011" />
     </envs>
     <EXTENSION ID="net.ashald.envfile">
       <option name="IS_ENABLED" value="true" />
@@ -17,6 +16,11 @@
         <ENTRY IS_ENABLED="true" PARSER="runconfig" IS_EXECUTABLE="false" />
         <ENTRY IS_ENABLED="true" PARSER="env" IS_EXECUTABLE="false" PATH=".env" />
       </ENTRIES>
+    </EXTENSION>
+    <EXTENSION ID="software.aws.toolkits.jetbrains.core.execution.GoAwsConnectionRunConfigurationExtension">
+      <option name="credential" />
+      <option name="region" />
+      <option name="useCurrentConnection" value="false" />
     </EXTENSION>
     <kind value="PACKAGE" />
     <package value="github.com/azarc-io/verathread-gateway/cmd/app" />
