@@ -1,0 +1,91 @@
+{
+	"name": "Verathread Gateway",
+	// "image": "mcr.microsoft.com/devcontainers/go:1.22-bookworm",
+	"dockerFile": "Dockerfile",
+	// do not change these if you want Docker in Docker support
+	// "runArgs": ["--init", "--privileged"],
+	// "mounts": [ "source=/var/run/docker.sock,target=/var/run/docker-host.sock,type=bind" ],
+	// "overrideCommand": false,
+	"workspaceMount": "source=${localWorkspaceFolder}/,target=/workspace,type=bind,consistency=cached",
+
+	"features": {
+		"ghcr.io/devcontainers/features/node:1": {
+			"version": "latest"
+		},
+		"ghcr.io/devcontainers/features/docker-in-docker:2": {},
+		"ghcr.io/devcontainers/features/go:1": {
+			"version": "1.22.2",
+			"golangciLintVersion": "1.59.1"
+		}
+	},
+
+	"customizations": {
+		"codespaces": {
+			"repositories": {
+				"azarc-io/verathread-dev-toolkit": {
+					"permissions": {
+						"contents": "read"
+					}
+				},
+				"azarc-io/verathread-next-common": {
+					"permissions": {
+						"contents": "read"
+					}
+				}
+			}
+		}
+	},
+
+	// some base images require a specific user name
+	// "remoteUser": "vscode",
+
+	// Set container specific settings
+	"settings": {
+		"terminal.integrated.defaultProfile.linux": "zsh",
+		"files.trimTrailingWhitespace": true,
+		"files.trimFinalNewlines": true,
+		"files.insertFinalNewline": true
+	},
+
+	"hostRequirements": {
+		"cpus": 4
+	},
+
+	// forward ports for the app
+	"forwardPorts": [
+		80,
+		6010,
+		6443,
+		3000
+	],
+
+	// add labels
+	"portsAttributes": {
+
+	},
+
+	// install extensions
+	"extensions": [
+		"golang.go",
+		"GitHub.codespaces",
+		"ms-azuretools.vscode-docker",
+		"github.vscode-github-actions",
+		"dsznajder.es7-react-js-snippets",
+		"davidanson.vscode-markdownlint",
+		"gruntfuggly.todo-tree",
+		"mutantdino.resourcemonitor",
+		"humao.rest-client",
+		"timonwong.shellcheck",
+	],
+
+	// "waitFor": "postCreateCommand",
+
+	// Use 'onCreateCommand' to run commands as part of container creation.
+	 "onCreateCommand": "/bin/bash -c .devcontainer/on-create.sh",
+
+	// Use 'postCreateCommand' to run commands after the container is created.
+	 "postCreateCommand": "/bin/bash -c .devcontainer/post-create.sh",
+
+	// Use 'postStartCommand' to run commands after the container starts.
+	 "postStartCommand": "/bin/bash -c .devcontainer/post-start.sh"
+}

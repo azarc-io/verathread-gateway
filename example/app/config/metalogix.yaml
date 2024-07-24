@@ -3,22 +3,31 @@ id: vth-gateway-example-1
 webDir: web/dist
 
 logger:
-  level: info
+  level: trace
   mode: dev # or prd
 
-dapr:
-  http_port: 6112
-  grpc_port: 6111
-
 http:
-  address: 0.0.0.0
-  port: 6110
+  public:
+    address: 0.0.0.0
+    port: 6110
+  private:
+    address: 0.0.0.0
+    port: 6111
+  cors:
+    allow_credentials: true
+    allow_origins:
+      - '*'
+    allow_headers:
+      - '*'
+    allow_methods:
+      - POST
+      - GET
+      - PUT
+      - DELETE
+      - PATCH
+      - HEAD
 
 registration:
-  webBaseUrl: http://example:6110
-  baseWsUrl: ws://example:6110
-
-# Enabled dapr in embedded mode, to only be used for local development
-# in K8S dapr is automatically injected into the pod as a container and this is not required
-development:
-  enabled: false
+  gateway_url: http://gateway:6011/graphql
+  web_url: http://example-fe:3001
+  api_url: http://example:6110/graphql

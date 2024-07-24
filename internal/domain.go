@@ -2,19 +2,23 @@ package internal
 
 import (
 	"net/http"
+	"net/http/httputil"
 	"net/url"
+	"regexp"
 	"strings"
 	"time"
 
-	"github.com/azarc-io/verathread-gateway/internal/api"
-	"github.com/azarc-io/verathread-gateway/internal/cache"
-	federation2 "github.com/azarc-io/verathread-gateway/internal/federation"
+	pvtgraph "github.com/azarc-io/verathread-gateway/internal/gql/graph/private"
+	pvtresolvers "github.com/azarc-io/verathread-gateway/internal/gql/graph/private/resolvers"
+	pubgraph "github.com/azarc-io/verathread-gateway/internal/gql/graph/public"
+	pubresolvers "github.com/azarc-io/verathread-gateway/internal/gql/graph/public/resolvers"
+	middleware2 "github.com/azarc-io/verathread-gateway/internal/middleware"
+	"github.com/azarc-io/verathread-gateway/internal/service"
+	graphqluc "github.com/azarc-io/verathread-next-common/usecase/graphql"
+	"github.com/erni27/imcache"
+
 	apptypes "github.com/azarc-io/verathread-gateway/internal/types"
 
-	error2 "github.com/azarc-io/verathread-gateway/internal/error"
-
-	"github.com/azarc-io/verathread-gateway/internal/config"
-	httpuc "github.com/azarc-io/verathread-next-common/usecase/http"
 	"github.com/azarc-io/verathread-next-common/util/healthz"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -28,18 +32,14 @@ import (
 
 type (
 	Domain struct {
-		log          zerolog.Logger // default logger
-		opts         *config.APIGatewayOptions
-		http         httpuc.HttpUseCase
-		httpClient   *http.Client
-		sdlMap       map[string]string
-		services     []*federation2.ServiceConfig
-		federation   *federation2.Federation
-		ready        bool
-		is           api.InternalService
-		httpInternal httpuc.HttpUseCase
-		cache        *cache.ProjectCache
-		registry     *RegistrationActor
+		log        zerolog.Logger // default logger
+		opts       *apptypes.APIGatewayOptions
+		httpClient *http.Client
+		ready      bool
+		is         apptypes.InternalService
+		publicAPI  graphqluc.GraphQLUseCase
+		privateAPI graphqluc.GraphQLUseCase
+		proxy      *proxy
 	}
 )
 
@@ -47,58 +47,51 @@ type (
 /* LIFECYCLE
 /************************************************************************/
 
-func (d *Domain) Init() error {
-	// handles caching apps to reduce db hits
-	d.cache = cache.NewProjectCache(d.log)
-
+func (d *Domain) PreStart() error {
+	// healthz
 	healthz.Register("gateway", time.Second*1, func() error {
 		if !d.ready {
-			return error2.ErrGatewayNotReady
+			return apptypes.ErrGatewayNotReady
 		}
 		return nil
 	})
 
 	// create service to handle inbound requests
-	d.is = NewService(d.opts, d.log, d.cache)
+	d.is = service.NewService(d.opts, d.log)
 
-	// register app registration actor
-	if err := d.createAppRegistryHandler(); err != nil {
+	// register the application gateways own graphql endpoints
+	if err := d.registerGqlAPI(); err != nil {
 		return err
 	}
-
-	return nil
-}
-
-func (d *Domain) Stop() error {
-	return nil
-}
-
-func (d *Domain) Start() error {
-	// create http server
-	d.http = httpuc.NewHttpUseCase(
-		httpuc.WithHttpConfig(d.opts.Config.HTTP),
-		httpuc.WithLogger(d.log),
-	)
-
-	// route all unhandled requests to echo
-	mux := d.opts.DaprUseCase.Mux()
-	mux.NotFound(func(writer http.ResponseWriter, request *http.Request) {
-		d.http.Server().ServeHTTP(writer, request)
-	})
-
-	// health check
-	d.http.Server().GET("/health", echo.WrapHandler(healthz.Handler()))
 
 	// register the shell app route
 	d.registerShellAppRoute()
 
-	// graphql federation
-	if err := d.registerGraphqlRoute(); err != nil {
-		return err
-	}
-
 	// resource proxy
 	d.registerProxyRouter()
+
+	return nil
+}
+
+func (d *Domain) PostStart() error {
+	// watches for leadership changed events in order to prevent contention on rebuilding of the shell's configuration
+	// data in the cache
+	d.opts.RedisUseCase.SubscribeToElectionEvents(func(onPromote <-chan time.Time, onDemote <-chan time.Time) {
+		for {
+			select {
+			case <-onPromote:
+				go func() {
+					if err := d.is.Watch(); err != nil {
+						panic(err)
+					}
+				}()
+			case <-onDemote:
+				if err := d.is.UnWatch(); err != nil {
+					panic(err)
+				}
+			}
+		}
+	})
 
 	// flag service is ready so health starts reporting ok status
 	d.ready = true
@@ -106,13 +99,20 @@ func (d *Domain) Start() error {
 	return nil
 }
 
+func (d *Domain) PreStop() error {
+	// TODO mark unavailable so services return a service is going down error
+	return nil
+}
+
 /************************************************************************/
 /* SHELL APP
 /************************************************************************/
 
-// registerShellAppRoute serves up the shell app
+// registerShellAppRoute serves up the shell app, supports 2 modes
+// Proxy: If web proxy is set in your config then will proxy that url
+// WebDir: If web director is set and proxy is not set then will serve static files from the web dir
 func (d *Domain) registerShellAppRoute() {
-	e := d.http.Server()
+	e := d.opts.PublicHTTPUseCase.Server()
 
 	if d.opts.Config.WebProxy != "" {
 		d.log.Info().Msgf("serving files from: %s", d.opts.Config.WebProxy)
@@ -123,13 +123,15 @@ func (d *Domain) registerShellAppRoute() {
 		}
 
 		tgt := &apptypes.ProxyTarget{
+			ID:           "gateway",
 			Name:         "shell",
-			URL:          _url,
+			WebURL:       _url,
+			APIURL:       _url,
 			Meta:         nil,
-			RegexRewrite: nil,
+			RegexRewrite: map[*regexp.Regexp]string{},
 		}
 
-		grp := d.http.Server().Group("")
+		grp := e.Group("")
 		grp.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
 			return func(c echo.Context) error {
 				req := c.Request()
@@ -148,18 +150,20 @@ func (d *Domain) registerShellAppRoute() {
 					req.Header.Set(echo.HeaderXForwardedFor, c.RealIP())
 				}
 
-				if err := rewriteURL(tgt.RegexRewrite, req); err != nil {
+				if err := d.proxy.rewriteURL(tgt.RegexRewrite, req); err != nil {
 					return err
 				}
+
+				c.Set(apptypes.TargetURLKey, tgt.APIURL)
+				c.Set(apptypes.AppNameKey, tgt.Name)
 
 				// Proxy
 				switch {
 				case c.IsWebSocket():
-					proxyRaw(tgt, c).ServeHTTP(res, req)
+					d.proxy.proxyRaw(tgt, c).ServeHTTP(res, req)
 				case req.Header.Get(echo.HeaderAccept) == "text/event-stream":
 				default:
-					log.Info().Msgf("proxy to %s%s", tgt.URL, req.URL)
-					proxyHTTP(tgt, c).ServeHTTP(res, req)
+					d.proxy.proxyHTTP(tgt, c).ServeHTTP(res, req)
 				}
 
 				return nil
@@ -170,10 +174,15 @@ func (d *Domain) registerShellAppRoute() {
 
 		g1 := e.Group("")
 		g1.Use(
+			func(next echo.HandlerFunc) echo.HandlerFunc {
+				return func(c echo.Context) error {
+					c.Response().Header().Set("Cache-Control", "max-age=31536000")
+					return next(c)
+				}
+			},
 			middleware.GzipWithConfig(middleware.GzipConfig{
 				Skipper: func(c echo.Context) bool {
-					ct := c.Response().Header().Get(echo.HeaderContentType)
-					return ct != "text/css" && ct != "application/javascript"
+					return !strings.Contains(c.Path(), ".html")
 				},
 			}),
 			middleware.StaticWithConfig(middleware.StaticConfig{
@@ -193,63 +202,20 @@ func (d *Domain) registerShellAppRoute() {
 }
 
 /************************************************************************/
-/* GRAPHQL ROUTING
+/* APP PROXIES
 /************************************************************************/
 
-func (d *Domain) registerGraphqlRoute() error {
-	// transform any statically registered routes provided through configuration
-	for name, service := range d.opts.Config.Services {
-		d.services = append(d.services, &federation2.ServiceConfig{
-			Name:     name,
-			URL:      service.Gql,
-			WS:       service.GqlWs,
-			Fallback: nil,
-		})
-	}
-
-	// register the application gateways own graphql endpoint with the federation server,
-	// so we can serve up information about apps, navigation etc.
-	if err := d.registerGqlAPI(); err != nil {
-		return err
-	}
-
-	// create the federation gateway
-	d.federation = federation2.New(d.http, d.log, d.services, d.opts.WardenUseCase)
-
-	return nil
-}
-
-/************************************************************************/
-/* WEB APP PROXIES
-/************************************************************************/
-
-func ACAOHeaderOverwriteMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
-	return func(ctx echo.Context) error {
-		ctx.Response().Before(func() {
-			h := ctx.Response().Header()
-			h.Set("X-Content-Type-Options", h.Values("X-Content-Type-Options")[0])
-			h.Set("X-Dns-Prefetch-Control", h.Values("X-Dns-Prefetch-Control")[0])
-			h.Set("X-Download-Options", h.Values("X-Download-Options")[0])
-			h.Set("X-Frame-Options", h.Values("X-Frame-Options")[0])
-			h.Set("X-Request-Id", h.Values("X-Request-Id")[0])
-			h.Set("X-Xss-Protection", h.Values("X-Xss-Protection")[0])
-			h.Set("Vary", h.Values("Vary")[0])
-			for k, v := range ctx.Response().Header() {
-				log.Info().Msgf("header %s: %v", k, v)
-			}
-		})
-		return next(ctx)
-	}
-}
-
+// registerProxyRouter registers the routes that are responsible for proxying both api requests and fetching
+// modules for apps
 func (d *Domain) registerProxyRouter() {
-	grp := d.http.Server().Group("/module/:name")
-	grp.Use(ACAOHeaderOverwriteMiddleware)
-	grp.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
+	// routes graph requests to an app by its service name, the app must have registered itself in advance
+	grp1 := d.opts.PublicHTTPUseCase.Server().Group("/app/:appId/graphql")
+	grp1.Use(middleware2.ACAOHeaderOverwriteMiddleware)
+	grp1.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			req := c.Request()
 			res := c.Response()
-			module := c.Param("name")
+			app := c.Param("appId")
 
 			if req.Header.Get(echo.HeaderXRealIP) == "" || c.Echo().IPExtractor != nil {
 				req.Header.Set(echo.HeaderXRealIP, c.RealIP())
@@ -264,24 +230,80 @@ func (d *Domain) registerProxyRouter() {
 				req.Header.Set(echo.HeaderXForwardedFor, c.RealIP())
 			}
 
-			if tgt, ok := d.is.GetProxyTarget(module); ok {
-				if err := rewriteURL(tgt.RegexRewrite, req); err != nil {
+			if tgt, ok := d.is.GetProxyTarget(app); ok {
+				if err := d.proxy.rewriteURL(tgt.RegexRewrite, req); err != nil {
 					return err
 				}
 
-				d.log.Info().Msgf("found proxy target <%s>", tgt.URL)
+				d.log.Debug().Msgf("found gql proxy target <%s>:<%s>", app, tgt.APIURL)
+
+				c.Set(apptypes.TargetURLKey, tgt.APIURL)
+				c.Set(apptypes.AppNameKey, tgt.Name)
 
 				// Proxy
 				switch {
 				case c.IsWebSocket():
-					proxyRaw(tgt, c).ServeHTTP(res, req)
+					log.Debug().Msgf("proxy gql socket to %s%s", tgt.APIURL, req.URL)
+					d.proxy.proxyRaw(tgt, c).ServeHTTP(res, req)
 				case req.Header.Get(echo.HeaderAccept) == "text/event-stream":
+					// TODO SSE
 				default:
-					log.Info().Msgf("proxy to %s%s", tgt.URL, req.URL)
-					proxyHTTP(tgt, c).ServeHTTP(res, req)
+					log.Info().Msgf("proxy gql http   to %s%s", tgt.APIURL, req.URL)
+					d.proxy.proxyHTTP(tgt, c).ServeHTTP(res, req)
 				}
 			} else {
-				d.log.Warn().Msgf("no proxy target found for module <%s>", module)
+				d.log.Warn().Msgf("no proxy target found for <%s>", app)
+			}
+
+			return nil
+		}
+	})
+
+	// routes loading of web modules by service name, the app must have registered itself in advance
+	grp2 := d.opts.PublicHTTPUseCase.Server().Group("/app/:appId")
+	grp2.Use(middleware2.ACAOHeaderOverwriteMiddleware)
+	grp2.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			req := c.Request()
+			res := c.Response()
+			app := c.Param("appId")
+
+			if req.Header.Get(echo.HeaderXRealIP) == "" || c.Echo().IPExtractor != nil {
+				req.Header.Set(echo.HeaderXRealIP, c.RealIP())
+			}
+
+			if req.Header.Get(echo.HeaderXForwardedProto) == "" {
+				req.Header.Set(echo.HeaderXForwardedProto, c.Scheme())
+			}
+
+			// For HTTP, it is automatically set by Go HTTP reverse proxy.
+			if c.IsWebSocket() && req.Header.Get(echo.HeaderXForwardedFor) == "" {
+				req.Header.Set(echo.HeaderXForwardedFor, c.RealIP())
+			}
+
+			if tgt, ok := d.is.GetProxyTarget(app); ok {
+				if err := d.proxy.rewriteURL(tgt.RegexRewrite, req); err != nil {
+					return err
+				}
+
+				d.log.Debug().Msgf("found web proxy target <%s>:<%s>", app, tgt.WebURL)
+
+				c.Set(apptypes.TargetURLKey, tgt.WebURL)
+				c.Set(apptypes.AppNameKey, tgt.Name)
+
+				// Proxy
+				switch {
+				case c.IsWebSocket():
+					log.Info().Msgf("proxy socket to %s%s", tgt.WebURL, req.URL)
+					d.proxy.proxyRaw(tgt, c).ServeHTTP(res, req)
+				case req.Header.Get(echo.HeaderAccept) == "text/event-stream":
+					// TODO SSE
+				default:
+					log.Info().Msgf("proxy http   to %s%s", tgt.WebURL, req.URL)
+					d.proxy.proxyHTTP(tgt, c).ServeHTTP(res, req)
+				}
+			} else {
+				d.log.Warn().Msgf("no proxy target found for <%s>", app)
 			}
 
 			return nil
@@ -290,20 +312,70 @@ func (d *Domain) registerProxyRouter() {
 }
 
 /************************************************************************/
+/* API
+/************************************************************************/
+
+// registerGqlAPI registers graphql api handler
+func (d *Domain) registerGqlAPI() error {
+	// public api
+	d.publicAPI = graphqluc.NewGraphQLUseCase(
+		graphqluc.WithLogger(d.log),
+		graphqluc.WithHTTPUseCase(d.opts.PublicHTTPUseCase),
+		// graphqluc.WithServiceName(d.opts.ServiceName),
+		graphqluc.WithExecutableSchema(pubgraph.NewExecutableSchema(pubgraph.Config{
+			Resolvers: &pubresolvers.Resolver{
+				Opts:            d.opts,
+				InternalService: d.is,
+			},
+		})),
+	)
+
+	// private api
+	d.privateAPI = graphqluc.NewGraphQLUseCase(
+		graphqluc.WithLogger(d.log),
+		graphqluc.WithHTTPUseCase(d.opts.PrivateHTTPUseCase),
+		// graphqluc.WithServiceName(d.opts.ServiceName),
+		graphqluc.WithExecutableSchema(pvtgraph.NewExecutableSchema(pvtgraph.Config{
+			Resolvers: &pvtresolvers.Resolver{
+				Opts:            d.opts,
+				InternalService: d.is,
+			},
+		})),
+	)
+
+	return nil
+}
+
+/************************************************************************/
 /* FACTORY
 /************************************************************************/
 
-func NewGateway(opts ...config.APIGatewayOption) *Domain {
+func NewGateway(opts ...apptypes.APIGatewayOption) *Domain {
+	l := log.With().Str("app", "gateway").Logger()
 	g := &Domain{
-		log:        log.With().Str("app", "gateway").Logger(),
-		opts:       &config.APIGatewayOptions{},
+		log:        l,
+		opts:       &apptypes.APIGatewayOptions{},
 		httpClient: http.DefaultClient,
-		sdlMap:     make(map[string]string),
+		proxy: &proxy{
+			log: l,
+			httpProxyCache: imcache.NewSharded[string, *httputil.ReverseProxy](apptypes.CacheShards, imcache.DefaultStringHasher64{},
+				imcache.WithCleanerOption[string, *httputil.ReverseProxy](apptypes.CacheCleanupFreq),
+				imcache.WithEvictionCallbackOption[string, *httputil.ReverseProxy](func(key string, val *httputil.ReverseProxy, reason imcache.EvictionReason) {
+					if reason == imcache.EvictionReasonExpired {
+						log.Info().Str("uri", key).Msgf("http proxy evicted from cache")
+					}
+				}),
+			),
+		},
 	}
 
 	for _, opt := range opts {
 		opt(g.opts)
 	}
+
+	// has to be set here so that options are applied first
+	// this is the list of file names that should be scanned for tokens
+	g.proxy.filesToScan = g.opts.Config.AssetsToScan
 
 	return g
 }

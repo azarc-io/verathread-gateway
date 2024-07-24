@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 
@@ -8,6 +9,7 @@ import (
 
 	"github.com/99designs/gqlgen/api"
 	"github.com/99designs/gqlgen/codegen/config"
+	_ "github.com/99designs/gqlgen/graphql/introspection"
 	"github.com/99designs/gqlgen/plugin/modelgen"
 )
 
@@ -94,7 +96,10 @@ func constraintFieldHook(td *ast.Definition, fd *ast.FieldDefinition, f *modelge
 }
 
 func main() {
-	cfg, err := config.LoadConfigFromDefaultLocations()
+	configFile := flag.String("config", "gqlgen.yml", "--config the configuration file to load")
+	flag.Parse()
+
+	cfg, err := config.LoadConfig(*configFile)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "failed to load config", err.Error())
 		os.Exit(ConfigExitCode)

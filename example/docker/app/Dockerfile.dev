@@ -6,7 +6,6 @@ RUN go install github.com/go-task/task/v3/cmd/task@latest
 COPY taskfile.yaml /src/taskfile.yaml
 RUN task setup:container
 COPY example/.fsw.task.yml /src/example/.fsw.task.yml
-COPY dapr /src/dapr
 
 ARG GITHUB_PAT_TOKEN
 

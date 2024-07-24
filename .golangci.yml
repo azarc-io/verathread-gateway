@@ -275,3 +275,5 @@ linters:
     - tagalign
     - execinquery
     - zerologlint
+    - gofumpt
+    - goimports

@@ -3,7 +3,7 @@
 You can begin working on this project using docker compose without the need to have `golang` and `node` installed on your
 machine.
 
-!!! info
+!!! note
 
     Please note that the first time you start the environment it could take a few minutes for the entire stack
     to become stable and healthy.
@@ -15,31 +15,34 @@ machine.
 
 ### Commands
 
-Run the following command in the root of the project to build the docker images:
+!!! info
+
+    You can run the `task` command in the root of the project to get a list of tasks and their descriptions.
+
+Bring up the dev stack:
 
 ```shell
-docker-compose -f docker-compose-dev.yml build
+task compose:dev
 ```
-Run the following command to bring up the stack:
+
+Tear down the dev stack:
 
 ```shell
-docker-compose -f docker-compose-dev.yml up --watch
+task compose:dev:down
 ```
 
-!!! note
+Rebuild the docker images:
 
-    If you have prevously run docker compose in one of the other Verathread projects then you will need
-    to run `docker-compose down` to bring down the existing stack before you bring up the gateways stack.
+!!! info
 
-    If you get an error about a containers name being already in use then run the following command instad.
-    ``` shell
-    docker-compose -f docker-compose-dev.yml up --watch --remove-orphans
-    ```
-
-Run the following command to take down the stack:
+    This is only required if you have made changes to the docker files.
+    The below command will rebuild all containers, there are more fine grained tasks available if you prefer
+    you can run the `task` command to see a list.
 
 ```shell
-docker-compose down
+task compose:rebuild
 ```
+
+---
 
 You can now begin coding, your changes will be hot reloaded for the backend and HMR updates for the front end.

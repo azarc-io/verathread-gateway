@@ -1,9 +1,12 @@
 FROM node:20
 WORKDIR /src
-ADD cmd/web/package.json package.json
-ADD cmd/web/yarn.lock yarn.lock
+ENV VER=2
+ADD cmd/web/package.json /src/package.json
+ADD cmd/web/yarn.lock /src/yarn.lock
 RUN yarn install
+RUN yarn global add @rsbuild/core
 
-ENTRYPOINT yarn dev
+ENTRYPOINT yarn dev --env-mode development
+#ENTRYPOINT sleep 240
 
-ADD cmd/web /src
+#ADD cmd/web /src

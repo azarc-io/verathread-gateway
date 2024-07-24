@@ -1,6 +1,5 @@
-import {defineConfig, rspack} from '@rsbuild/core';
+import {defineConfig} from '@rsbuild/core';
 import {pluginReact} from '@rsbuild/plugin-react';
-import {ModuleFederationPlugin} from '@module-federation/enhanced/rspack';
 import {pluginSass} from "@rsbuild/plugin-sass";
 // @ts-ignore
 import {dependencies} from './package.json';
@@ -26,6 +25,30 @@ export default defineConfig({
     output: {
       minify: true
     },
+    moduleFederation: {
+        options: {
+            name: 'example',
+            filename: 'remoteEntry.js',
+            exposes: {
+                "./Counter": './src/components/Counter.tsx'
+            },
+            shared: {
+                ...dependencies,
+                'react': {
+                    requiredVersion: dependencies['react'],
+                    singleton: true
+                },
+                'react-dom': {
+                    requiredVersion: dependencies['react-dom'],
+                    singleton: true
+                },
+                'react-router-dom': {
+                    requiredVersion: dependencies['react-router-dom'],
+                    singleton: true
+                },
+            },
+        }
+    },
     tools: {
         rspack: (config, {appendPlugins}) => {
             // You need to set a unique value that is not equal to other applications
@@ -34,33 +57,6 @@ export default defineConfig({
 
             appendPlugins([
                 new CompressionPlugin(),
-                new ModuleFederationPlugin({
-                    name: 'example',
-                    filename: 'remoteEntry.js',
-                    dts: false,
-                    dev: {
-                        disableDynamicRemoteTypeHints: true,
-                    },
-                    exposes: {
-                        "./Counter": './src/components/Counter.tsx'
-                    },
-                    shared: {
-                        ...dependencies,
-                        'react': {
-                            requiredVersion: dependencies['react'],
-                            singleton: true,
-                            shareKey: 'react'
-                        },
-                        'react-dom': {
-                            requiredVersion: dependencies['react-dom'],
-                            singleton: true,
-                        },
-                        'react-router-dom': {
-                            requiredVersion: dependencies['react-router-dom'],
-                            singleton: true,
-                        },
-                    },
-                }),
             ]);
         },
     },

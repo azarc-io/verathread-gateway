@@ -40,6 +40,7 @@ local_resource(
   'gateway-compile',
   'CGO_ENABLED=0 GOOS=linux GOARCH=%s go build -gcflags "all=-N -l" -o ./bin/vth-gateway ./cmd/app/main.go' % arch,
   deps=['./cmd/app/main.go', './cmd/app', './internal/', './pkg/'],
+  ignore=['./internal/gql/node_modules'],
   labels=["compile"],
   resource_deps=[]
 )
@@ -83,7 +84,7 @@ if hmr:
     docker_build(
       'vth-gateway-web',
       context='.',
-      entrypoint='vite build --watch --outDir /web',
+      entrypoint='yarn dev:tilt',
       dockerfile=webDockerFile,
       platform='linux/%s' % arch,
       only=[
@@ -101,6 +102,15 @@ if hmr:
 # non hmr mode will simply sync your local dist folder, you can use vite build --watch
 # in this mode the gateway will serve the files and the side car becomes an ephemeral initContainer
 else:
+    local_resource(
+      'gateway-compile-web',
+      'yarn build --env-mode tilt',
+      dir="./cmd/web",
+      deps=['./cmd/web'],
+      ignore=['./cmd/web/node_modules', './cmd/web/dist'],
+      labels=["compile-web"],
+      resource_deps=[]
+    )
     docker_build_with_restart(
       'vth-gateway-web',
       context='.',
@@ -122,25 +132,19 @@ helm_resource(
   namespace=os.getenv('NAMESPACE'),
   deps=["./deployment/charts/gateway"],
   flags=[
+    '--values=./deployment/charts/gateway/values.yaml',
     '--set=configuration.auth.client_id=%s' % os.getenv('AUTH_CLIENT_ID'),
     '--set=configuration.auth.client_secret=%s' % os.getenv('AUTH_CLIENT_SECRET'),
     '--set=configuration.auth.domain=%s' % os.getenv('AUTH_DOMAIN'),
     '--set=dev=true',
-    '--set=bind.debug=%s'% gatewayDebugPort,
-    '--set=hmr=%s' % hmr
+    '--set=bind.debug=%s' % gatewayDebugPort,
+    '--set=hmr=%s' % hmr,
+    '--set=configuration.gateway.web_dir=%s' % ( '' if hmr else '/web'),
+    '--set=configuration.gateway.web_proxy=%s' % ( 'http://localhost:3000' if hmr else ''),
   ],
   image_deps=['vth-gateway', 'vth-gateway-web'],
   image_keys=[('image.repository', 'image.tag'), ('image.web_repository', 'image.web_repository_tag')],
 )
-
-# Forward mongo port
-#local_resource(
-#  name='mongo',
-#  serve_cmd='kubectl port-forward service/mongodb 27017:27017 --namespace=%s' % os.getenv('NAMESPACE'),
-#  labels=['ports'],
-#  links=['mongo://localhost:27017'],
-#  readiness_probe=probe(tcp_socket=tcp_socket_action(port=27017))
-#)
 
 if 'gateway' in to_debug:
     k8s_resource('gateway-chart',

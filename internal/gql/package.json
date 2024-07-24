@@ -1,0 +1,21 @@
+{
+  "name": "generate",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "generate": "yarn schema && yarn types && yarn private && yarn public",
+    "schema": "yarn graphql-codegen",
+    "types": "go run ./generate.go -config=gqlgen_types.yml",
+    "private": "go run ./generate.go -config=gqlgen_private.yml",
+    "public": "go run ./generate.go -config=gqlgen_public.yml"
+  },
+  "devDependencies": {
+    "@graphql-codegen/cli": "^5.0.2",
+    "@graphql-codegen/schema-ast": "^4.1.0",
+    "typescript": "^5.5.3"
+  },
+  "dependencies": {
+    "graphql": "^16.9.0"
+  }
+}

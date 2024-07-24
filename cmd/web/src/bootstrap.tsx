@@ -3,20 +3,22 @@ import ReactDOM from 'react-dom/client';
 import App from './App';
 import {ApolloClient, ApolloProvider, createHttpLink, InMemoryCache, split} from "@apollo/client";
 import {BrowserRouter} from "react-router-dom";
-import { WebSocketLink } from "@apollo/client/link/ws";
+import {WebSocketLink} from "@apollo/client/link/ws";
 import {getMainDefinition} from "@apollo/client/utilities";
 
-let apiBaseUri = import.meta.env.PUBLIC_API_BASE_URL;
-let wsBaseUri = import.meta.env.PUBLIC_API_BASE_WS_URL;
+const bHost = window.location.host;
+let apiBaseUri = `http://${bHost}/graphql`;
+let wsBaseUri = `ws://${bHost}/graphql`;
 
-if (process.env.NODE_ENV == "production") {
+if (import.meta.env.PUBLIC_PRODUCTION === "true" || import.meta.env.PUBLIC_PRODUCTION === true) {
+    console.log('running in production mode')
     // const domain = window.location.hostname.split('.')[0];
-    const bHost = window.location.host;
     apiBaseUri = `https://${bHost}/graphql`;
     wsBaseUri = `wss://${bHost}/graphql`;
 }
 
 console.log('env', process.env.NODE_ENV)
+console.log('production', import.meta.env.PUBLIC_PRODUCTION)
 console.log('api url', apiBaseUri)
 console.log('socket url', wsBaseUri)
 
@@ -57,7 +59,7 @@ if (rootEl) {
     root.render(
         <BrowserRouter>
             <ApolloProvider client={client}>
-            <App />
+                <App />
             </ApolloProvider>
         </BrowserRouter>
     );

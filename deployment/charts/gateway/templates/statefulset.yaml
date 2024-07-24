@@ -52,9 +52,10 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.mr_tag | default .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
-            - containerPort: {{ .Values.bind.http }}
-              name: http
-
+            - containerPort: {{ .Values.bind.publicHttp }}
+              name: public-http
+            - containerPort: {{ .Values.bind.privateHttp }}
+              name: private-http
           {{- if eq .Values.dev true }}
             - containerPort: {{ .Values.bind.debug }}
               name: debug
@@ -62,14 +63,14 @@ spec:
           readinessProbe:
             httpGet:
               path: /health
-              port: {{ .Values.bind.http }}
+              port: {{ .Values.bind.publicHttp }}
             periodSeconds: 5
             failureThreshold: 3
             initialDelaySeconds: 5
           livenessProbe:
             httpGet:
               path: /health
-              port: {{ .Values.bind.http }}
+              port: {{ .Values.bind.publicHttp }}
             periodSeconds: 5
             failureThreshold: 3
             initialDelaySeconds: 5
@@ -116,7 +117,7 @@ spec:
           image: "{{ .Values.image.web_repository }}:{{ .Values.image.web_repository_tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
-            - name: http
+            - name: hmr
               containerPort: 3000
               protocol: TCP
           volumeMounts:

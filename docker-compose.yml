@@ -17,29 +17,28 @@
       echo "db.createCollection($1, { capped: false });" >> /docker-entrypoint-initdb.d/2-init-db-collection.js &&
       echo "db.init.insert([{ message: $2 }]);" >> /docker-entrypoint-initdb.d/2-init-db-collection.js &&
       /usr/local/bin/docker-entrypoint.sh mongod --replSet rs0 --bind_ip_all --noauth' "'MONGO_APP_DATABASE'" "'init'" "'db initialized successfully'"
-    networks:
-      - gw-network
     ports:
       - "27018:27017"
     volumes:
       - ./.data/mongodb:/data/db
       - ./.data/mongodb/opt:/opt/keyfile/
 
-  placement:
-    image: "daprio/dapr"
-    command: [ "./placement", "-port", "50006" ]
-    networks:
-      - gw-network
+  keydb:
+    image: eqalpha/keydb
+    container_name: keydb
+    # command: keydb-server /etc/keydb/redis.conf --server-threads 2 --active-replica yes --replicaof 192.168.1.1 6379
+    # command: keydb-server /etc/keydb/redis.conf --server-threads 2 --active-replica yes --replicaof 192.168.1.2 6379
+    command: keydb-server --server-threads 2
+    volumes:
+      #      - ./redis.conf:/etc/keydb/redis.conf
+      - ./.data/keydb:/data
     ports:
-      - "8080:8080"
-      - "50006:50006"
-    environment:
-      DAPR_PLACEMENT_METADATA_ENABLED: true
+      - 6379:6379
+    restart: unless-stopped
 
-networks:
-  gw-network:
-    driver: bridge
-    ipam:
-      driver: default
-      config:
-        - subnet: 172.16.238.0/24
+  nats:
+    image: nats
+    ports:
+      - "4222:4222"
+    command: "--cluster_name dev"
+

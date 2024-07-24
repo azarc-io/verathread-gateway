@@ -10,9 +10,16 @@ import (
 	"net"
 	"net/http"
 	"net/http/httputil"
+	"net/url"
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
+
+	apputil "github.com/azarc-io/verathread-gateway/internal/util"
+	"github.com/erni27/imcache"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 
 	apptypes "github.com/azarc-io/verathread-gateway/internal/types"
 
@@ -26,26 +33,116 @@ import (
 // 499 too instead of the more problematic 5xx, which does not allow to detect this situation
 const StatusCodeContextCanceled = 499
 
-func proxyRaw(t *apptypes.ProxyTarget, c echo.Context) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		in, _, err := c.Response().Hijack()
-		if err != nil {
-			c.Set("_error", fmt.Errorf("proxy raw, hijack error=%w, url=%s", err, t.URL))
-			return
-		}
-		defer in.Close()
+// proxyCacheTimeoutDuration how long to store cached proxies for
+var proxyCacheTimeoutDuration = time.Minute * 2
 
-		out, err := net.Dial("tcp", t.URL.Host)
+type (
+	proxy struct {
+		httpProxyCache *imcache.Sharded[string, *httputil.ReverseProxy]
+		log            zerolog.Logger
+		filesToScan    []string
+	}
+)
+
+// responseModifier modifies proxied responses, unzipping them if required and scanning for tokens
+func (p *proxy) responseModifier(response *http.Response, c echo.Context) error {
+	var (
+		encoding = response.Header.Get(echo.HeaderContentEncoding)
+		body     []byte
+		err      error
+		reader   io.Reader
+	)
+
+	if strings.Contains(encoding, "gzip") || strings.Contains(encoding, "deflate") {
+		reader, err = gzip.NewReader(response.Body)
 		if err != nil {
-			c.Set("_error", echo.NewHTTPError(http.StatusBadGateway, fmt.Sprintf("proxy raw, dial error=%v, url=%s", err, t.URL)))
+			return err
+		}
+		body, err = io.ReadAll(reader)
+		if err != nil {
+			return err
+		}
+	} else {
+		body, err = io.ReadAll(response.Body)
+		if err != nil {
+			return err
+		}
+	}
+
+	// will replace and cache tokens in served files
+	if apputil.ShouldReplace(c.Request().URL.Path, p.filesToScan) {
+		body = apputil.ReplaceTokens(c, body)
+	}
+
+	response.Body = io.NopCloser(bytes.NewBuffer(body))
+	response.Header.Set("Cache-Control", "max-age=31536000")
+
+	return nil
+}
+
+// errorHandler handles proxy errors
+func (p *proxy) errorHandler(resp http.ResponseWriter, req *http.Request, err error, tgt *apptypes.ProxyTarget, c echo.Context) {
+	target := c.Get(apptypes.TargetURLKey).(*url.URL)
+	desc := target.String()
+	if tgt.Name != "" {
+		desc = fmt.Sprintf("%s(%s)", tgt.Name, desc)
+	}
+	// If the client canceled the request (usually by closing the connection), we can report a
+	// client error (4xx) instead of a server error (5xx) to correctly identify the situation.
+	// The Go standard library (as of late 2020) wraps the exported, standard
+	// context.Canceled error with unexported garbage value requiring a substring check, see
+	// https://github.com/golang/go/blob/6965b01ea248cabb70c3749fd218b36089a21efb/src/net/net.go#L416-L430
+	if errors.Is(err, context.Canceled) || strings.Contains(err.Error(), "operation was canceled") {
+		httpError := echo.NewHTTPError(StatusCodeContextCanceled, fmt.Sprintf("client closed connection: %v", err))
+		httpError.Internal = err
+		c.Set("_error", httpError)
+	} else {
+		httpError := echo.NewHTTPError(http.StatusBadGateway, fmt.Sprintf("remote %s unreachable, could not forward: %v", desc, err))
+		httpError.Internal = err
+		c.Set("_error", httpError)
+	}
+}
+
+// proxyRaw proxies raw TCP connection, capable of handling web sockets and SSE
+func (p *proxy) proxyRaw(t *apptypes.ProxyTarget, c echo.Context) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var (
+			target  = c.Get(apptypes.TargetURLKey).(*url.URL)
+			in, out net.Conn
+			err     error
+		)
+
+		in, _, err = c.Response().Hijack()
+		if err != nil {
+			c.Set("_error", fmt.Errorf("proxy raw, hijack error=%w, url=%s", err, target.String()))
 			return
 		}
-		defer out.Close()
+		defer func(in net.Conn) {
+			err = in.Close()
+			if err != nil {
+				p.log.Warn().Err(err).Msgf("error while closing inbound proxy connection")
+			}
+		}(in)
+
+		out, err = net.Dial("tcp", target.Host)
+		if err != nil {
+			log.Warn().Err(err).Str("url", target.String()).Msgf("proxy raw, dial error")
+			c.Set("_error", echo.NewHTTPError(http.StatusBadGateway,
+				fmt.Sprintf("proxy raw, dial error=%v, url=%s", err, target.String())))
+			return
+		}
+		defer func(out net.Conn) {
+			err = out.Close()
+			if err != nil {
+				p.log.Warn().Err(err).Msgf("error while closing outbound proxy connection")
+			}
+		}(out)
 
 		// Write header
 		err = r.Write(out)
 		if err != nil {
-			c.Set("_error", echo.NewHTTPError(http.StatusBadGateway, fmt.Sprintf("proxy raw, request header copy error=%v, url=%s", err, t.URL)))
+			c.Set("_error", echo.NewHTTPError(http.StatusBadGateway,
+				fmt.Sprintf("proxy raw, request header copy error=%v, url=%s", err, target.String())))
 			return
 		}
 
@@ -60,49 +157,36 @@ func proxyRaw(t *apptypes.ProxyTarget, c echo.Context) http.Handler {
 		go cp(in, out)
 		err = <-errCh
 		if err != nil && err != io.EOF {
-			c.Set("_error", fmt.Errorf("proxy raw, copy body error=%w, url=%s", err, t.URL))
+			p.log.Warn().Err(err).Str("url", target.String()).Msgf("proxy raw, copy body error")
+			c.Set("_error", fmt.Errorf("proxy raw, copy body error=%w, url=%s", err, target.String()))
 		}
 	})
 }
 
-func proxyHTTP(tgt *apptypes.ProxyTarget, c echo.Context) http.Handler {
-	proxy := httputil.NewSingleHostReverseProxy(tgt.URL)
+// proxyHTTP proxies http requests, uses caching to improve performance and reduce memory allocations
+func (p *proxy) proxyHTTP(tgt *apptypes.ProxyTarget, c echo.Context) http.Handler {
+	target := c.Get(apptypes.TargetURLKey).(*url.URL)
+	proxy, exists := p.httpProxyCache.Get(target.String())
+
+	if !exists {
+		log.Info().Str("target", target.String()).Msgf("creating new proxy for target service")
+		proxy = httputil.NewSingleHostReverseProxy(target)
+		p.httpProxyCache.Set(target.String(), proxy, imcache.WithExpiration(proxyCacheTimeoutDuration))
+	}
+
 	proxy.ModifyResponse = func(response *http.Response) error {
-		r, err := gzip.NewReader(response.Body)
-		if err != nil {
-			return err
-		}
-		body, err := io.ReadAll(r)
-		if err != nil {
-			return err
-		}
-		response.Body = io.NopCloser(bytes.NewBuffer(body))
-		return nil
+		return p.responseModifier(response, c)
 	}
+
 	proxy.ErrorHandler = func(resp http.ResponseWriter, req *http.Request, err error) {
-		desc := tgt.URL.String()
-		if tgt.Name != "" {
-			desc = fmt.Sprintf("%s(%s)", tgt.Name, tgt.URL.String())
-		}
-		// If the client canceled the request (usually by closing the connection), we can report a
-		// client error (4xx) instead of a server error (5xx) to correctly identify the situation.
-		// The Go standard library (as of late 2020) wraps the exported, standard
-		// context.Canceled error with unexported garbage value requiring a substring check, see
-		// https://github.com/golang/go/blob/6965b01ea248cabb70c3749fd218b36089a21efb/src/net/net.go#L416-L430
-		if errors.Is(err, context.Canceled) || strings.Contains(err.Error(), "operation was canceled") {
-			httpError := echo.NewHTTPError(StatusCodeContextCanceled, fmt.Sprintf("client closed connection: %v", err))
-			httpError.Internal = err
-			c.Set("_error", httpError)
-		} else {
-			httpError := echo.NewHTTPError(http.StatusBadGateway, fmt.Sprintf("remote %s unreachable, could not forward: %v", desc, err))
-			httpError.Internal = err
-			c.Set("_error", httpError)
-		}
+		p.errorHandler(resp, req, err, tgt, c)
 	}
+
 	return proxy
 }
 
-func rewriteURL(rewriteRegex map[*regexp.Regexp]string, req *http.Request) error {
+// rewriteURL applies any url re-write expressions
+func (p *proxy) rewriteURL(rewriteRegex map[*regexp.Regexp]string, req *http.Request) error {
 	if len(rewriteRegex) == 0 {
 		return nil
 	}
@@ -124,7 +208,7 @@ func rewriteURL(rewriteRegex map[*regexp.Regexp]string, req *http.Request) error
 	}
 
 	for k, v := range rewriteRegex {
-		if replacer := captureTokens(k, rawURI); replacer != nil {
+		if replacer := p.captureTokens(k, rawURI); replacer != nil {
 			url, err := req.URL.Parse(replacer.Replace(v))
 			if err != nil {
 				return err
@@ -137,7 +221,8 @@ func rewriteURL(rewriteRegex map[*regexp.Regexp]string, req *http.Request) error
 	return nil
 }
 
-func captureTokens(pattern *regexp.Regexp, input string) *strings.Replacer {
+// captureTokens captures url tokens for re-writing
+func (p *proxy) captureTokens(pattern *regexp.Regexp, input string) *strings.Replacer {
 	groups := pattern.FindAllStringSubmatch(input, -1)
 	if groups == nil {
 		return nil
@@ -153,20 +238,4 @@ func captureTokens(pattern *regexp.Regexp, input string) *strings.Replacer {
 		replace[j+1] = v
 	}
 	return strings.NewReplacer(replace...)
-}
-
-// enable this and call it if you want to enable re-write
-func rewriteRulesRegex(rewrite map[string]string) map[*regexp.Regexp]string {
-	// Initialize
-	rulesRegex := map[*regexp.Regexp]string{}
-	for k, v := range rewrite {
-		k = regexp.QuoteMeta(k)
-		k = strings.ReplaceAll(k, `\*`, "(.*?)")
-		if strings.HasPrefix(k, `\^`) {
-			k = strings.ReplaceAll(k, `\^`, "^")
-		}
-		k += "$"
-		rulesRegex[regexp.MustCompile(k)] = v
-	}
-	return rulesRegex
 }

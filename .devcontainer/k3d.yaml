@@ -1,0 +1,48 @@
+apiVersion: k3d.io/v1alpha5
+kind: Simple
+metadata:
+  name: dev-1
+servers: 1
+agents: 1
+kubeAPI:
+  host: "127.0.0.1"
+  hostIP: "0.0.0.0"
+  hostPort: "6443"
+image: rancher/k3s:v1.24.13-k3s1
+network: local-net
+ports:
+  - port: 443:443
+    nodeFilters:
+      - loadbalancer
+  - port: 80:80
+    nodeFilters:
+      - loadbalancer
+registries:
+  create: # creates a default registry to be used with the cluster; same as `--registry-create registry.localhost`
+    name: k3d-local-registry
+    host: "k3d-local-registry"
+    hostPort: "5000"
+options:
+  k3d:
+    wait: true
+    timeout: "120s"
+    disableLoadbalancer: false
+    disableImageVolume: false
+    disableRollback: true
+    loadbalancer:
+      configOverrides:
+        - settings.workerConnections=256
+  k3s:
+    extraArgs:
+      - arg: --tls-san=*.dev.cluster.local
+        nodeFilters:
+          - server:*
+      - arg: --tls-san=dev.cluster.local
+        nodeFilters:
+          - server:*
+      - arg: --tls-san=127.0.0.1
+        nodeFilters:
+          - server:*
+  kubeconfig:
+    updateDefaultKubeconfig: true
+    switchCurrentContext: true

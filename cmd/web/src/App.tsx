@@ -1,12 +1,19 @@
 import './App.css';
 import {useSubscription} from "@apollo/client";
-import {ShellConfigEventType, SubscribeToShellConfigDocument} from "./__generated__/graphql";
+import {
+    ShellConfigEventType,
+    ShellConfigurationSubscription,
+    SubscribeToShellConfigDocument
+} from "./__generated__/graphql";
 import {Link, Route, Routes} from "react-router-dom";
 import Home from "./components/Home";
 import RemoteAppLoader from "./components/RemoteLoader";
+import {useState} from 'react';
 
 const App = () => {
-    const {loading, error, data} = useSubscription(SubscribeToShellConfigDocument, {
+    const [config, setConfig] = useState<ShellConfigurationSubscription | undefined>(undefined);
+
+    const { loading, error } = useSubscription(SubscribeToShellConfigDocument, {
         variables: {
             tenant: "abc",
             events: [
@@ -14,12 +21,23 @@ const App = () => {
                 ShellConfigEventType.Rebuild,
                 ShellConfigEventType.Updated
             ]
-        }
+        },
+        shouldResubscribe: true,
+        fetchPolicy: "network-only",
+        onData: ({ data }) => {
+            console.log('received event')
+            setConfig(data.data?.shellConfiguration)
+        },
+        onComplete: () => {
+            console.log('subscription complete')
+        },
     })
+
+    console.log('render', loading, config)
 
     if (error) return <div className="content">Could not load configuration</div>
 
-    if (loading) return <div className="content">Loading</div>
+    if (!config && loading) return <div className="content">Loading</div>
 
     return (
         <>
@@ -28,7 +46,7 @@ const App = () => {
                     <li className="nav-item">
                         <Link to="/">Home</Link>
                     </li>
-                    {data?.shellConfiguration?.configuration.categories?.map((row) => (
+                    {config?.configuration.categories?.map((row) => (
                         <li key={row?.category} className="nav-item has-dropdown">
                             <a href="#">{row!.title}</a>
                             {row?.entries ?
@@ -47,10 +65,10 @@ const App = () => {
             </nav>
             <div className="content">
                 <Routes key="routes">
-                    <Route key="home" path="/" element={<Home/>}/>
-                    {data?.shellConfiguration?.configuration.categories?.map((row) => {
+                    <Route key="home" path="/" element={<Home />} />
+                    {config?.configuration.categories?.map((row) => {
                         return row?.entries?.map(value => (
-                            <Route key={row?.title} path={value?.module.path} element={<RemoteAppLoader app={value}/>}/>
+                            <Route key={row?.title} path={value?.module.path} element={<RemoteAppLoader app={value} />} />
                         ))
                     })}
                 </Routes>

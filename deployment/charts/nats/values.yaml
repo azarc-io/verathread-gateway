@@ -1,0 +1,29 @@
+nats:
+  nameOverride: nats
+  fullnameOverride: nats
+  podDisruptionBudget:
+    enabled: false
+  natsbox:
+    enabled: true
+  nats:
+    externalAccess: false
+    limits:
+      maxPayload: "8mb"
+    jetstream:
+      enabled: true
+      domain: local
+      fileStorage:
+        enabled: true
+        size: 1Gi
+  cluster:
+    enabled: false
+    replicas: 1
+    noAdvertise: false
+  podAnnotations:
+    argocd.argoproj.io/sync-wave: "1"
+
+# exposes the service over node ports for local access (enabled only for local development)
+local: true
+
+secret:
+jetstream:
