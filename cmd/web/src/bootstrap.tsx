@@ -6,11 +6,12 @@ import {BrowserRouter} from "react-router-dom";
 import {WebSocketLink} from "@apollo/client/link/ws";
 import {getMainDefinition} from "@apollo/client/utilities";
 
+const isProduction = import.meta.env.PUBLIC_PRODUCTION === "true" || import.meta.env.PUBLIC_PRODUCTION === true
 const bHost = window.location.host;
 let apiBaseUri = `http://${bHost}/graphql`;
 let wsBaseUri = `ws://${bHost}/graphql`;
 
-if (import.meta.env.PUBLIC_PRODUCTION === "true" || import.meta.env.PUBLIC_PRODUCTION === true) {
+if (isProduction && bHost != 'dev.cluster.local' && bHost != 'localhost') {
     console.log('running in production mode')
     // const domain = window.location.hostname.split('.')[0];
     apiBaseUri = `https://${bHost}/graphql`;
