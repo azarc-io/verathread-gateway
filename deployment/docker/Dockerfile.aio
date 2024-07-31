@@ -7,5 +7,7 @@ ARG TARGETARCH
 COPY bin/be/${TARGETOS}-${TARGETARCH}/vth-gateway /
 RUN chmod +x /vth-gateway
 COPY bin/fe /web
+COPY cmd/app/config/base.yaml /config
+COPY cmd/app/config/aio.yaml /config
 
 ENTRYPOINT ["/vth-gateway"]
