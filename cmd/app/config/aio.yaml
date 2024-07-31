@@ -16,5 +16,5 @@ http:
     address: 0.0.0.0
 
 gateway:
-  web_dir: ""
-  web_proxy: "http://shell-fe:3000"
+  web_dir: "/web"
+  web_proxy: ""
