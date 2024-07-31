@@ -1,0 +1,11 @@
+FROM --platform=$BUILDPLATFORM alpine:3.20
+LABEL authors="waeljammal"
+
+ARG TARGETOS
+ARG TARGETARCH
+
+COPY bin/be/${TARGETOS}-${TARGETARCH}/vth-gateway /
+RUN chmod +x /vth-gateway
+COPY bin/fe /web
+
+ENTRYPOINT ["/vth-gateway"]

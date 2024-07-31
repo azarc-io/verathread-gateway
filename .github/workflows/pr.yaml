@@ -533,15 +533,20 @@ jobs:
           cp bin/be/linux-amd64/vth-gateway bin/be/vth-gateway-linux-amd64
           cp bin/be/linux-arm64/vth-gateway bin/be/vth-gateway-linux-arm64
           zip -r bin/vth-gateway-shell.zip bin/fe
-
-      - name: Merge Pull Request
+      - name: "Build All In One Developer Image"
+        run: task docker:build:multi
+        env:
+          DOCKER_REGISTRY: ghcr.io/azarc-io/verathread-gateway
+          DOCKER_IMAGE: gateway-aio
+          DOCKER_VERSION: ${{ steps.tag.outputs.tag }}
+          DOCKERFILE: "deployment/docker/Dockerfile.aio"
+      - name: "Merge Pull Request"
         uses: juliangruber/merge-pull-request-action@v1
         with:
           github-token: ${{ secrets.PAT_TOKEN }}
           number: ${{ github.event.pull_request.number }}
           method: squash
           repo: azarc-io/verathread-gateway
-
       - name: "Push Git Tag - After Squash"
         run: |
           git fetch origin
