@@ -11,7 +11,7 @@ const bHost = window.location.host;
 let apiBaseUri = `http://${bHost}/graphql`;
 let wsBaseUri = `ws://${bHost}/graphql`;
 
-if (isProduction && bHost != 'dev.cluster.local' && bHost != 'localhost') {
+if (isProduction && !bHost.includes('dev.cluster.local') && !bHost.includes('localhost')) {
     console.log('running in production mode')
     // const domain = window.location.hostname.split('.')[0];
     apiBaseUri = `https://${bHost}/graphql`;
