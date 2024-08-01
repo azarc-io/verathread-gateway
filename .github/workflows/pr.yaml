@@ -533,13 +533,20 @@ jobs:
           cp bin/be/linux-amd64/vth-gateway bin/be/vth-gateway-linux-amd64
           cp bin/be/linux-arm64/vth-gateway bin/be/vth-gateway-linux-arm64
           zip -r bin/vth-gateway-shell.zip bin/fe
-      - name: "Build All In One Developer Image"
+      - name: "Build All In One Image"
         run: task docker:build:multi
         env:
           DOCKER_REGISTRY: ghcr.io/azarc-io/verathread-gateway
           DOCKER_IMAGE: gateway-aio
           DOCKER_VERSION: ${{ steps.tag.outputs.tag }}
           DOCKERFILE: "deployment/docker/Dockerfile.aio"
+      - name: "Build All In One Developer Image"
+        run: task docker:build:multi
+        env:
+          DOCKER_REGISTRY: ghcr.io/azarc-io/verathread-gateway
+          DOCKER_IMAGE: gateway-dev
+          DOCKER_VERSION: ${{ steps.tag.outputs.tag }}
+          DOCKERFILE: "deployment/docker/Dockerfile.aio-dev"
       - name: "Merge Pull Request"
         uses: juliangruber/merge-pull-request-action@v1
         with:

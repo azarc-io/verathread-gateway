@@ -1,0 +1,17 @@
+FROM --platform=$BUILDPLATFORM node:20-alpine3.20
+LABEL authors="waeljammal"
+
+ARG TARGETOS
+ARG TARGETARCH
+ENV CONFIG_DIR=/config
+ENV BASE_CONTEXT=base
+ENV CONFIG_CONTEXTS=aio-dev
+
+COPY bin/be/${TARGETOS}-${TARGETARCH}/vth-gateway /
+RUN chmod +x /vth-gateway
+COPY cmd/web /web
+COPY cmd/app/config/base.yaml /config/base.yaml
+COPY cmd/app/config/aio-dev.yaml /config/aio-dev.yaml
+
+ENTRYPOINT ["/bin/sh", "-c" , "cd /web && yarn install && yarn dev & /vth-gateway"]
+

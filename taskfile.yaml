@@ -165,7 +165,7 @@ tasks:
   build:be:amd:
     desc: "builds the backend"
     cmds:
-      - CGO_ENABLED=1 GOOS={{.GOOS}} GOARCH={{.GOARCH}} go build -tags wg_composition_v8 -ldflags='-linkmode external -extldflags=-static -s -w' -o bin/{{.GOOS}}-{{.GOARCH}}/vth-gateway cmd/app/main.go
+      - CGO_ENABLED=0 GOOS={{.GOOS}} GOARCH={{.GOARCH}} go build -tags wg_composition_v8 -ldflags='-extldflags=-static -s -w' -o bin/{{.GOOS}}-{{.GOARCH}}/vth-gateway cmd/app/main.go
     vars:
       GOOS: '{{default "linux" .GOOS}}'
       GOARCH: '{{default "amd64" .GOARCH}}'
