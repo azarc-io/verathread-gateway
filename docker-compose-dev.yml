@@ -42,7 +42,7 @@ services:
       - "6010:6010"
       - "6011:6011"
     depends_on:
-      - mongodb_dev
+      - mongodb
       - keydb
       - nats
     volumes:

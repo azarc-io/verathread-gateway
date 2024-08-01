@@ -1,5 +1,5 @@
 database:
-  dsn: mongodb%3A%2F%2Fmongodb_dev%3A27017%2F%3FreplicaSet%3Drs0%26tls%3Dfalse%26connect%3Ddirect%26retryWrites%3Dtrue%26w%3Dmajority
+  dsn: mongodb%3A%2F%2Fmongodb%3A27017%2F%3FreplicaSet%3Drs0%26tls%3Dfalse%26connect%3Ddirect%26retryWrites%3Dtrue%26w%3Dmajority
   name: vth-gateway
 
 nats:
