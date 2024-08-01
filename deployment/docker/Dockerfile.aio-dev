@@ -13,5 +13,5 @@ COPY cmd/web /web
 COPY cmd/app/config/base.yaml /config/base.yaml
 COPY cmd/app/config/aio-dev.yaml /config/aio-dev.yaml
 
-ENTRYPOINT ["/bin/sh", "-c" , "cd /web && yarn install && yarn dev & /vth-gateway"]
+ENTRYPOINT ["/bin/sh", "-c" , "cd /web && yarn install && yarn dev:tilt & /vth-gateway"]
 
