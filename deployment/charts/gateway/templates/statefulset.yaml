@@ -89,8 +89,10 @@ spec:
             - name: {{ include "service.fullname" . }}-pvc
               mountPath: {{ .Values.fileStorage.storageDirectory }}
           {{- end }}
+          {{- if eq .Values.web true }}
             - name: static-files
               mountPath: /web
+          {{- end }}
           env:
             - name: MICRO_SERVICE_ID
               valueFrom:
