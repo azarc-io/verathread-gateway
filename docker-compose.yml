@@ -3,9 +3,9 @@
   # GLOBAL COMMON SERVICES
   ##################################################################################
 
-  mongodb_dev:
+  mongodb:
     image: mongo:latest
-    container_name: mongodb_dev
+    container_name: mongodb
     environment:
       MONGO_APP_DATABASE: vth-gateway
       MONGO_REPLICA_HOST: host.docker.internal

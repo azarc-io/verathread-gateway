@@ -39,7 +39,7 @@
     ports:
       - "6010:6010"
     depends_on:
-      - mongodb_dev
+      - mongodb
       - keydb
       - nats
 
