@@ -16,6 +16,8 @@ middleware_enabled: "no"
 dev: false
 # hmr for the front end
 hmr: false
+# if true the web sidecar will be loaded
+web: true
 
 fileStorage:
   enabled: false

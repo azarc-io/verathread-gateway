@@ -110,6 +110,7 @@ spec:
             - name: {{ $name | toYaml }}
               value: {{ $value | toString | toYaml }}
             {{- end }}
+      {{- if eq .Values.web true }}
       {{- if eq .Values.dev false }}
       initContainers:
       {{- end }}
@@ -124,7 +125,7 @@ spec:
             - name: static-files
               mountPath: /web
               readOnly: false
-
+      {{- end }}
       nodeSelector:
       {{ toYaml .Values.nodeSelector | indent 8 }}
       {{- with .Values.imagePullSecrets }}
