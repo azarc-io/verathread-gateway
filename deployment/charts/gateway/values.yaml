@@ -1,13 +1,9 @@
 replicas: 1
-
-nodeSelector: { }
-
+nodeSelector: {}
 nameOverride: "gateway"
 fullnameOverride: "gateway"
-
 imagePullSecrets:
   - name: ghcr-login-secret
-
 # if using traefik as your proxy
 traefik: "yes"
 # disables deployment of any proxy middle wares
@@ -18,41 +14,34 @@ dev: false
 hmr: false
 # if true the web sidecar will be loaded
 web: true
-
 fileStorage:
   enabled: false
-
 # Custom Service account management
 serviceAccount:
   # Whether to create service account or not
   create: true
   # Name of the service account
   name: gateway-svc-account
-
 image:
   # the gateway image
-  repository: k3d-local-registry:5000/vth-gateway
-  tag: latest
+  repository: ghcr.io/azarc-io/verathread-gateway/gateway-be
+  tag: v1.65.0
   # the web sidecar, if hmr is true then the sidecar will run node and build the web app
   # otherwise it will be a lightweight container that hosts the files on behalf of the gateway
-  web_repository: k3d-local-registry:5000/vth-gateway-web
-  web_repository_tag: latest
+  web_repository: ghcr.io/azarc-io/verathread-gateway/gateway-fe
+  web_repository_tag: v1.65.0
   pullPolicy: Always
-
 # port bindings
 bind:
   publicHttp: &bindPublicHttpPort 6010
   privateHttp: &bindPrivateHttpPort 6011
   hmr: 3000
   debug: 40000
-
 # labels to attach to all resources
 commonLabels:
   verathread.com/scrape-logs: "true"
-
 # pod annotations
 annotations: {}
-
 # handles routing, is split into two / for web and /graphql and /modules for api and static file proxy
 ingress:
   # If `true`, an Ingress is created
@@ -63,7 +52,7 @@ ingress:
       maxrequestbodybytes: 3750000
       memrequestbodybytes: 3750000
   # Additional Ingress labels
-  labels: { }
+  labels: {}
   # List of rules for the Ingress
   rules:
     - host: dev.cluster.local
@@ -74,7 +63,6 @@ ingress:
         - /app
         - /health
         - /
-
 # Service configuration
 configuration:
   name: gateway
@@ -131,7 +119,6 @@ configuration:
       address: ${BIND_ADDRESS}
       port: 6015
     services: {}
-
 # environment variables attached to the pod
 extraEnvVars:
   BASE_CONTEXT: config
