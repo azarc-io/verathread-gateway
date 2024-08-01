@@ -237,11 +237,16 @@ func (s *service) RegisterApp(ctx context.Context, req *model.RegisterAppInput) 
 		ent.Slot3 = apputil.MapRegisterSlotToEntity(req.Slot3)
 	}
 
+	// clear the cached proxy target for this app id
+	s.targetCache.Remove(ent.ID)
+
+	// update the cache
 	st := rc.HSet(ctx, "apps", ent.ID, ent)
 	if st.Err() != nil {
 		s.log.Error().Err(st.Err()).Msgf("failed to cache application")
 	}
 
+	// set the initial keep alive token
 	kcmd := rc.Set(ctx, s.appKeepAliveKey(ent.Name), true, apptypes.KeepAliveTTL)
 	if kcmd.Err() != nil {
 		return nil, err
